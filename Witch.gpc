@@ -1,3 +1,19 @@
+// Reference
+// abs	Returns an absolute value of a number.
+// inv	Returns the inverse value of a number.
+// pow	Raise and value to the specified power.
+// isqrt	Calculates an integer square root.
+// random	Generates a random value between the specified range.
+// clamp	The clamp func clamps a value between an upper and lower bound.
+// min	Gets the minimum of two values.
+// max	Gets the maximum of two values.
+// get_polar	Gets the stick output at a given angle or radius with a high-resolution value.
+// get_ipolar	Gets the unmodified stick output at a given angle or radius with a high-resolution value.
+// POLAR_LS	Allows you to get a Angle or Radius for LEFT STICK.
+// POLAR_RS	Allows you to get a Angle or Radius for RIGHT STICK.
+// POLAR_ANGLE	You can get the angle from 0 to 359.
+// POLAR_RADIUS	You can get the radius from -32 768 to +32 767.
+
 // UTILITIES
 define FORWARD = -40;
 define BACKWARD = 40;
@@ -7,6 +23,10 @@ define DIR_LEFT = -1;
 define DIR_RIGHT = 1;
 define true = TRUE;
 define false = FALSE;
+define CANCEL_ANGLE = 150;
+define CHANGE_AREA = 20;
+define START_AREA = 20;
+define IGNORE_AREA = 100;
 
 // REMAPS
 define BTN_START = XB1_A;
@@ -28,10 +48,6 @@ define GET_AUTO_AIM = XB1_LB;
 define SET_AUTO_AIM = XB1_LB;
 
 // OTHERS
-int doDisableAim;
-int taps, tapExpire, isAutoAimJustStarted, isContinueAutoAimAfterReleaseSnipeButton;
-int isAutoAiming, isDoContinueAutoAim, snipeTime;
-
 int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX;
 int doStart, doSelect, doHome;
 int didStartAction;
@@ -39,17 +55,16 @@ int didStartAction;
 int isHoldingY, isComboRelease;
 int direction;
 
+// ANGLE AUTO WALK
+int angleDegree, isAutoWalkingAngle, walkDirectionAngleX, walkDirectionAngleY;
+int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference;
+
 remap XB1_MENU -> XB1_PR1;
 remap XB1_PR1 -> XB1_MENU;
-
-// remap XB1_LB -> TRACE_1;
-///remap TRACE_1 -> XB1_LB;
 
 // PRESS HOME
 unmap XB1_XBOX;
 remap XB1_XBOX -> XB1_Y
-// remap XB1_XBOX -> XB1_MENU
-// remap XB1_PL1 -> XB1_MENU;
 
 // PRESS SELECT
 remap XB1_VIEW -> XB1_PR2;
@@ -66,41 +81,78 @@ unmap XB1_RY;
 
 init {
 	direction = -1;
-	doDisableAim = TRUE;
-	isDoContinueAutoAim = FALSE;
-	snipeTime = 0;
-	isContinueAutoAimAfterReleaseSnipeButton = TRUE;
-	didStartAction = FALSE;
+	set_val(TRACE_6, 1);
 }
 
 main {
-	if(get_val(XB1_RY) > 5 || get_val(XB1_RY) < -5) set_val(XB1_LY, get_val(XB1_RY));
-	if(get_val(XB1_RX) > 5 || get_val(XB1_RX) < -5) set_val(XB1_LX, get_val(XB1_RX));
-
-	//set_val(XB1_RX, useDeadzone(XB1_RX, 10))
-	//set_val(XB1_RY, useDeadzone(XB1_RY, 10))
-	set_val(XB1_LX, useDeadzone(XB1_LX, 10))
-	set_val(XB1_LY, useDeadzone(XB1_LY, 10))
-	
-    adt_off(XB1_LT);
+	adt_off(XB1_LT);
     adt_off(XB1_RT);
-
+	
 	set_left_triggers_threshold(10);
     set_right_triggers_threshold(10, 1);
 	
 	if(get_val(XB1_SHARE)) set_val(PRESS_SELECT, 100);
 
-	// Rapid Look Arroud
-	if(get_val(XB1_LY) > 25) {
-		set_val(XB1_LY, 100)
-	} else if(get_val(XB1_LY) < -25) {
-		set_val(XB1_LY, -100)
+	if(get_val(XB1_RY) > 5 || get_val(XB1_RY) < -5) set_val(XB1_LY, get_val(XB1_RY));
+	if(get_val(XB1_RX) > 5 || get_val(XB1_RX) < -5) set_val(XB1_LX, get_val(XB1_RX));
+
+	// Check if the left joystick has moved past an initial circular radius X
+	if(is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), START_AREA)) {
+		// Capture the direction and angle of the joystick
+		if(event_press(GET_SELECT)) {
+			angleDegree = get_polar(POLAR_LS, POLAR_ANGLE);
+			set_val(TRACE_1, angleDegree);
+			isAutoWalkingAngle = TRUE;
+			isIgnoringChanges = TRUE;
+		} else if (isAutoWalkingAngle) {
+			if (!isInsideCancelationArea) {
+				// If the new angle is not within X degrees of the previous angle cancel isAutoWalkingAngle
+				set_val(TRACE_2, angleDegree);
+				newAngleDegree = get_polar(POLAR_LS, POLAR_ANGLE);
+				set_val(TRACE_3, newAngleDegree);
+				angleDifference = newAngleDegree - angleDegree;
+				set_val(TRACE_4, angleDifference);
+				if(angleDifference <= 180 && abs(angleDifference) <= CANCEL_ANGLE) {
+					isAutoWalkingAngle = TRUE;
+				} else if (angleDifference > 180 && abs(360 - angleDifference) <= CANCEL_ANGLE) {
+					isAutoWalkingAngle = TRUE;
+				} else {
+					isAutoWalkingAngle = FALSE;
+					set_val(TRACE_1, 0);
+				}
+			}
+
+			isInsideCancelationArea = TRUE;
+		}
+	} else {
+		isInsideCancelationArea = FALSE;
 	}
-	if(get_val(XB1_LX) > 25) {
-		set_val(XB1_LX, 100)
-	} else if(get_val(XB1_LX) < -25) {
-		set_val(XB1_LX, -100)
+
+	// Move the character in the direction of the captured angle
+	if(isAutoWalkingAngle) {
+		if(isIgnoringChanges) {
+			// wait for the joystick to move back inside the circular radius 30
+			isIgnoringChanges = !is_analog_inside_circle(get_val(XB1_LX), get_val(XB1_LY), IGNORE_AREA);
+			set_val(TRACE_5, isIgnoringChanges);
+		} else {
+			// Check if the left joystick has moved past the circular radius 70 (into the direction change area)
+			if(is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), CHANGE_AREA)) {
+				angleDegree = get_polar(POLAR_LS, POLAR_ANGLE);
+				set_val(TRACE_1, angleDegree);
+			}
+		}
+		
+		set_polar(POLAR_LS, -angleDegree, 32767);
+	} else {
+		set_val(XB1_RX, useDeadzone(XB1_RX, 10))
+		set_val(XB1_RY, useDeadzone(XB1_RY, 10))
+		set_val(XB1_LX, useDeadzone(XB1_LX, 5))
+		set_val(XB1_LY, useDeadzone(XB1_LY, 5))
+		
+		rapid_look_arround_l(25);
 	}
+
+	set_val(TRACE_5, is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), 30));
 
 	if (get_val(GET_START)) {
 		set_val(XB1_A, 100)
@@ -108,6 +160,41 @@ main {
 
 	if (get_val(GET_SELECT)) {
 		set_val(XB1_B, 100)
+	}
+
+	// Auto Walk
+	/*if(isAutoWalkingY) {
+		if((walkDirectionY == DIR_FORWARD && isLeftAxisBackward(60)) 
+			|| (walkDirectionY == DIR_BACKWARD && get_val(PS3_LY) < -60)) {
+			isAutoWalkingY = FALSE;
+		} else {
+			set_val(XB1_LY, 100 * walkDirectionY);
+		}
+	} else if (isMultiPressStickAnyDirection(GET_SELECT, PS3_LY, 30) || 
+				isMultiPressStickAnyDirection(XB1_SHARE, PS3_LY, 30)) {
+			isAutoWalkingY = TRUE;
+			walkDirectionY = getDirection(PS3_LY)
+	}*/
+}
+
+function is_analog_inside_circle(x, y, radius) {
+	return (x * x + y * y) <= radius * radius;
+}
+
+function is_analog_outside_circle(x, y, radius) {
+	return (x * x + y * y) > radius * radius;
+}
+
+function rapid_look_arround_l(tolerance) {
+	if(get_val(XB1_LY) > tolerance) {
+		set_val(XB1_LY, 100)
+	} else if(get_val(XB1_LY) < -tolerance) {
+		set_val(XB1_LY, -100)
+	}
+	if(get_val(XB1_LX) > tolerance) {
+		set_val(XB1_LX, 100)
+	} else if(get_val(XB1_LX) < -tolerance) {
+		set_val(XB1_LX, -100)
 	}
 }
 
