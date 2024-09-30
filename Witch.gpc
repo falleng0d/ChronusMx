@@ -15,7 +15,7 @@ define PRESS_START = XB1_PR1;
 define PRESS_HOME = XB1_PL1;
 define GET_SELECT = XB1_VIEW;
 define GET_START = XB1_MENU;
-define GET_HOME = XB1_GUIDE;
+define GET_HOME = XB1_XBOX;
 define XB_B = XB1_B;
 define XB_A = XB1_A;
 define XB_X = XB1_X;
@@ -46,9 +46,9 @@ remap XB1_PR1 -> XB1_MENU;
 ///remap TRACE_1 -> XB1_LB;
 
 // PRESS HOME
-unmap XB1_GUIDE;
-remap XB1_GUIDE -> XB1_Y
-// remap XB1_GUIDE -> XB1_MENU
+unmap XB1_XBOX;
+remap XB1_XBOX -> XB1_Y
+// remap XB1_XBOX -> XB1_MENU
 // remap XB1_PL1 -> XB1_MENU;
 
 // PRESS SELECT
