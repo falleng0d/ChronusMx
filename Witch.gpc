@@ -26,7 +26,7 @@ define false = FALSE
 define MAX_RADIUS = 32767
 
 // ANGLE AUTO WALK RELATED
-define CANCEL_ANGLE = 150
+define CANCEL_ANGLE = 360
 define CHANGE_AREA = 20
 define START_AREA = 20
 define IGNORE_AREA = 100
@@ -53,6 +53,7 @@ define SET_AUTO_AIM = XB1_LB
 // ANGLE AUTO WALK
 int angleDegree, isAutoWalkingAngle, walkDirectionAngleX, walkDirectionAngleY
 int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
+int autoWalkAngleCancelationKey
 
 // LOCAL VARIABLES (for easier code reading)
 int angle_deg // used on rapid_look_around_8_directions_l
@@ -87,6 +88,25 @@ main {
 	
 	set_left_triggers_threshold(10)
 	set_right_triggers_threshold(10, 1)
+	
+	if(isAutoWalkingAngle) {
+		if (event_press(GET_HOME)) {
+			autoWalkAngleCancelationKey = GET_HOME
+			isAutoWalkingAngle = FALSE
+		}
+		if (event_press(XB1_RT)) {
+			autoWalkAngleCancelationKey = XB1_RT
+			isAutoWalkingAngle = FALSE
+		}
+	}
+	
+	if(autoWalkAngleCancelationKey) {
+		if(event_release(autoWalkAngleCancelationKey)) {
+			autoWalkAngleCancelationKey = 0
+		} else {
+			set_val(autoWalkAngleCancelationKey, 0)
+		}
+	}
 
 	// Check if the left joystick has moved past an initial circular radius X
 	if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), START_AREA)) {
