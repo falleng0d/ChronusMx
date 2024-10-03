@@ -53,6 +53,9 @@ define SET_AUTO_AIM = XB1_LB;
 int angleDegree, isAutoWalkingAngle, walkDirectionAngleX, walkDirectionAngleY;
 int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference;
 
+// LOCAL VARIABLES (for easier code reading)
+int angle_deg; // used on rapid_look_around_8_directions_l
+
 remap XB1_MENU -> XB1_PR1;
 remap XB1_PR1 -> XB1_MENU;
 
@@ -142,7 +145,7 @@ main {
 		applyDeadzone(XB1_LX, 5);
 		applyDeadzone(XB1_LY, 5);
 		
-		rapid_look_arround_l(25);
+		rapid_look_around_full_l(10);
 	}
 
 	set_val(TRACE_5, is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), 30));
@@ -174,6 +177,47 @@ function rapid_look_arround_l(tolerance) {
 		set_val(XB1_LX, 100)
 	} else if(get_val(XB1_LX) < -tolerance) {
 		set_val(XB1_LX, -100)
+	}
+}
+
+function rapid_look_around_8_directions_l(tolerance) {
+	set_val(TRACE_6, get_polar(POLAR_LS, POLAR_ANGLE));
+	
+    if (abs(get_ival(XB1_LX)) > tolerance || abs(get_ival(XB1_LY)) > tolerance) {
+        angle_deg = get_polar(POLAR_LS, POLAR_ANGLE);
+        
+        // Determine which of the 8 directions is closest
+        if (angle_deg < 22 || angle_deg >= 337) {
+            set_val(XB1_LX, 100);
+            set_val(XB1_LY, 0);
+        } else if (angle_deg < 67) {
+            set_val(XB1_LX, 71);  // 100 / sqrt(2)
+            set_val(XB1_LY, 71);
+        } else if (angle_deg < 112) {
+            set_val(XB1_LX, 0);
+            set_val(XB1_LY, -100);
+        } else if (angle_deg < 157) {
+            set_val(XB1_LX, -71);
+            set_val(XB1_LY, -71);
+        } else if (angle_deg < 202) {
+            set_val(XB1_LX, -100);
+            set_val(XB1_LY, 0);
+        } else if (angle_deg < 247) {
+            set_val(XB1_LX, -71);
+            set_val(XB1_LY, 71);
+        } else if (angle_deg < 292) {
+            set_val(XB1_LX, 0);
+            set_val(XB1_LY, 100);
+        } else {
+            set_val(XB1_LX, 71);
+            set_val(XB1_LY, 71);
+        }
+    }
+}
+
+function rapid_look_around_full_l(tolerance) {
+	if (abs(get_ival(XB1_LX)) > tolerance || abs(get_ival(XB1_LY)) > tolerance) {
+		set_polar(POLAR_LS, 0 - get_polar(POLAR_LS, POLAR_ANGLE), 32767);
 	}
 }
 
