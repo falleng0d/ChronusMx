@@ -86,14 +86,12 @@ main {
 	
 	set_left_triggers_threshold(10);
 	set_right_triggers_threshold(10, 1);
-	
-	if(get_val(XB1_SHARE)) set_val(PRESS_SELECT, 100);
 
 	if(get_val(XB1_RY) > 5 || get_val(XB1_RY) < -5) set_val(XB1_LY, get_val(XB1_RY));
 	if(get_val(XB1_RX) > 5 || get_val(XB1_RX) < -5) set_val(XB1_LX, get_val(XB1_RX));
 
 	// Check if the left joystick has moved past an initial circular radius X
-	if(is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), START_AREA)) {
+	if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), START_AREA)) {
 		// Capture the direction and angle of the joystick
 		if(event_press(GET_SELECT)) {
 			angleDegree = get_polar(POLAR_LS, POLAR_ANGLE);
@@ -128,11 +126,11 @@ main {
 	if(isAutoWalkingAngle) {
 		if(isIgnoringChanges) {
 			// wait for the joystick to move back inside the circular radius 30
-			isIgnoringChanges = !is_analog_inside_circle(get_val(XB1_LX), get_val(XB1_LY), IGNORE_AREA);
+			isIgnoringChanges = !is_analog_inside_circle(get_ival(XB1_LX), get_ival(XB1_LY), IGNORE_AREA);
 			set_val(TRACE_5, isIgnoringChanges);
 		} else {
 			// Check if the left joystick has moved past the circular radius 70 (into the direction change area)
-			if(is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), CHANGE_AREA)) {
+			if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), CHANGE_AREA)) {
 				angleDegree = get_polar(POLAR_LS, POLAR_ANGLE);
 				set_val(TRACE_1, angleDegree);
 			}
@@ -148,14 +146,18 @@ main {
 		rapid_look_around_full_l(10);
 	}
 
-	set_val(TRACE_5, is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), 30));
+	set_val(TRACE_5, is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), 30));
 
-	if (get_val(GET_START)) {
+	if (get_ival(GET_START)) {
 		set_val(XB1_A, 100)
 	}
 
-	if (get_val(GET_SELECT)) {
+	if (get_ival(GET_SELECT)) {
 		set_val(XB1_B, 100)
+	}
+	
+	if(get_ival(XB1_SHARE)) {
+		set_val (PRESS_SELECT, 100)
 	}
 }
 
