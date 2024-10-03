@@ -15,138 +15,138 @@
 // POLAR_RADIUS	You can get the radius from -32 768 to +32 767.
 
 // UTILITIES
-define FORWARD = -40;
-define BACKWARD = 40;
-define DIR_FORWARD = -1;
-define DIR_BACKWARD = 1;
-define DIR_LEFT = -1;
-define DIR_RIGHT = 1;
-define true = TRUE;
-define false = FALSE;
+define FORWARD = -40
+define BACKWARD = 40
+define DIR_FORWARD = -1
+define DIR_BACKWARD = 1
+define DIR_LEFT = -1
+define DIR_RIGHT = 1
+define true = TRUE
+define false = FALSE
 
 // ANGLE AUTO WALK RELATED
-define CANCEL_ANGLE = 150;
-define CHANGE_AREA = 20;
-define START_AREA = 20;
-define IGNORE_AREA = 100;
+define CANCEL_ANGLE = 150
+define CHANGE_AREA = 20
+define START_AREA = 20
+define IGNORE_AREA = 100
 
 // REMAPS
-define BTN_START = XB1_A;
-define PRESS_SELECT = XB1_PR2;
-define PRESS_START = XB1_PR1;
-define PRESS_HOME = XB1_PL1;
-define GET_SELECT = XB1_VIEW;
-define GET_START = XB1_MENU;
-define GET_HOME = XB1_XBOX;
-define XB_B = XB1_B;
-define XB_A = XB1_A;
-define XB_X = XB1_X;
-define XB_Y = XB1_Y;
-define GET_L1 = XB1_LB;
-define PRESS_L1 = XB1_LB;
+define BTN_START = XB1_A
+define PRESS_SELECT = XB1_PR2
+define PRESS_START = XB1_PR1
+define PRESS_HOME = XB1_PL1
+define GET_SELECT = XB1_VIEW
+define GET_START = XB1_MENU
+define GET_HOME = XB1_XBOX
+define XB_B = XB1_B
+define XB_A = XB1_A
+define XB_X = XB1_X
+define XB_Y = XB1_Y
+define GET_L1 = XB1_LB
+define PRESS_L1 = XB1_LB
 
 // AUTO AIM
-define GET_AUTO_AIM = XB1_LB;
-define SET_AUTO_AIM = XB1_LB;
+define GET_AUTO_AIM = XB1_LB
+define SET_AUTO_AIM = XB1_LB
 
 // ANGLE AUTO WALK
-int angleDegree, isAutoWalkingAngle, walkDirectionAngleX, walkDirectionAngleY;
-int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference;
+int angleDegree, isAutoWalkingAngle, walkDirectionAngleX, walkDirectionAngleY
+int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
 
 // LOCAL VARIABLES (for easier code reading)
-int angle_deg; // used on rapid_look_around_8_directions_l
+int angle_deg // used on rapid_look_around_8_directions_l
 
-remap XB1_MENU -> XB1_PR1;
-remap XB1_PR1 -> XB1_MENU;
+remap XB1_MENU -> XB1_PR1
+remap XB1_PR1 -> XB1_MENU
 
 // PRESS HOME
-unmap XB1_XBOX;
+unmap XB1_XBOX
 remap XB1_XBOX -> XB1_Y
 
 // PRESS SELECT
-remap XB1_VIEW -> XB1_PR2;
-remap XB1_PR2 -> XB1_VIEW;
+remap XB1_VIEW -> XB1_PR2
+remap XB1_PR2 -> XB1_VIEW
 
-// remap XB1_B -> XB1_A;
-// remap XB1_A -> XB1_B;
+// remap XB1_B -> XB1_A
+// remap XB1_A -> XB1_B
 
 // PRESS SHARE
-unmap XB1_SHARE;
+unmap XB1_SHARE
 
-unmap XB1_RX;
-unmap XB1_RY;
+unmap XB1_RX
+unmap XB1_RY
 
 init {
-	set_val(TRACE_6, 1);
+	set_val(TRACE_6, 1)
 }
 
 main {
-	adt_off(XB1_LT);
-	adt_off(XB1_RT);
+	adt_off(XB1_LT)
+	adt_off(XB1_RT)
 	
-	set_left_triggers_threshold(10);
-	set_right_triggers_threshold(10, 1);
+	set_left_triggers_threshold(10)
+	set_right_triggers_threshold(10, 1)
 
-	if(get_val(XB1_RY) > 5 || get_val(XB1_RY) < -5) set_val(XB1_LY, get_val(XB1_RY));
-	if(get_val(XB1_RX) > 5 || get_val(XB1_RX) < -5) set_val(XB1_LX, get_val(XB1_RX));
+	if(get_val(XB1_RY) > 5 || get_val(XB1_RY) < -5) set_val(XB1_LY, get_val(XB1_RY))
+	if(get_val(XB1_RX) > 5 || get_val(XB1_RX) < -5) set_val(XB1_LX, get_val(XB1_RX))
 
 	// Check if the left joystick has moved past an initial circular radius X
 	if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), START_AREA)) {
 		// Capture the direction and angle of the joystick
 		if(event_press(GET_SELECT)) {
-			angleDegree = get_polar(POLAR_LS, POLAR_ANGLE);
-			set_val(TRACE_1, angleDegree);
-			isAutoWalkingAngle = TRUE;
-			isIgnoringChanges = TRUE;
+			angleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
+			set_val(TRACE_1, angleDegree)
+			isAutoWalkingAngle = TRUE
+			isIgnoringChanges = TRUE
 		} else if (isAutoWalkingAngle) {
 			if (!isInsideCancelationArea) {
 				// If the new angle is not within X degrees of the previous angle cancel isAutoWalkingAngle
-				set_val(TRACE_2, angleDegree);
-				newAngleDegree = get_polar(POLAR_LS, POLAR_ANGLE);
-				set_val(TRACE_3, newAngleDegree);
-				angleDifference = newAngleDegree - angleDegree;
-				set_val(TRACE_4, angleDifference);
+				set_val(TRACE_2, angleDegree)
+				newAngleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
+				set_val(TRACE_3, newAngleDegree)
+				angleDifference = newAngleDegree - angleDegree
+				set_val(TRACE_4, angleDifference)
 				if(angleDifference <= 180 && abs(angleDifference) <= CANCEL_ANGLE) {
-					isAutoWalkingAngle = TRUE;
+					isAutoWalkingAngle = TRUE
 				} else if (angleDifference > 180 && abs(360 - angleDifference) <= CANCEL_ANGLE) {
-					isAutoWalkingAngle = TRUE;
+					isAutoWalkingAngle = TRUE
 				} else {
-					isAutoWalkingAngle = FALSE;
-					set_val(TRACE_1, 0);
+					isAutoWalkingAngle = FALSE
+					set_val(TRACE_1, 0)
 				}
 			}
 
-			isInsideCancelationArea = TRUE;
+			isInsideCancelationArea = TRUE
 		}
 	} else {
-		isInsideCancelationArea = FALSE;
+		isInsideCancelationArea = FALSE
 	}
 
 	// Move the character in the direction of the captured angle
 	if(isAutoWalkingAngle) {
 		if(isIgnoringChanges) {
 			// wait for the joystick to move back inside the circular radius 30
-			isIgnoringChanges = !is_analog_inside_circle(get_ival(XB1_LX), get_ival(XB1_LY), IGNORE_AREA);
-			set_val(TRACE_5, isIgnoringChanges);
+			isIgnoringChanges = !is_analog_inside_circle(get_ival(XB1_LX), get_ival(XB1_LY), IGNORE_AREA)
+			set_val(TRACE_5, isIgnoringChanges)
 		} else {
 			// Check if the left joystick has moved past the circular radius 70 (into the direction change area)
 			if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), CHANGE_AREA)) {
-				angleDegree = get_polar(POLAR_LS, POLAR_ANGLE);
-				set_val(TRACE_1, angleDegree);
+				angleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
+				set_val(TRACE_1, angleDegree)
 			}
 		}
 		
-		set_polar(POLAR_LS, -angleDegree, 32767);
+		set_polar(POLAR_LS, -angleDegree, 32767)
 	} else {
-		applyDeadzone(XB1_RX, 10);
-		applyDeadzone(XB1_RY, 10);
-		applyDeadzone(XB1_LX, 5);
-		applyDeadzone(XB1_LY, 5);
+		applyDeadzone(XB1_RX, 10)
+		applyDeadzone(XB1_RY, 10)
+		applyDeadzone(XB1_LX, 5)
+		applyDeadzone(XB1_LY, 5)
 		
-		rapid_look_around_full_l(10);
+		rapid_look_around_full_l(10)
 	}
 
-	set_val(TRACE_5, is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), 30));
+	set_val(TRACE_5, is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), 30))
 
 	if (get_ival(GET_START)) {
 		set_val(XB1_A, 100)
@@ -162,11 +162,11 @@ main {
 }
 
 function is_analog_inside_circle(x, y, radius) {
-	return (x * x + y * y) <= radius * radius;
+	return (x * x + y * y) <= radius * radius
 }
 
 function is_analog_outside_circle(x, y, radius) {
-	return (x * x + y * y) > radius * radius;
+	return (x * x + y * y) > radius * radius
 }
 
 function rapid_look_arround_l(tolerance) {
@@ -183,43 +183,43 @@ function rapid_look_arround_l(tolerance) {
 }
 
 function rapid_look_around_8_directions_l(tolerance) {
-	set_val(TRACE_6, get_polar(POLAR_LS, POLAR_ANGLE));
+	set_val(TRACE_6, get_polar(POLAR_LS, POLAR_ANGLE))
 	
     if (abs(get_ival(XB1_LX)) > tolerance || abs(get_ival(XB1_LY)) > tolerance) {
-        angle_deg = get_polar(POLAR_LS, POLAR_ANGLE);
+        angle_deg = get_polar(POLAR_LS, POLAR_ANGLE)
         
         // Determine which of the 8 directions is closest
         if (angle_deg < 22 || angle_deg >= 337) {
-            set_val(XB1_LX, 100);
-            set_val(XB1_LY, 0);
+            set_val(XB1_LX, 100)
+            set_val(XB1_LY, 0)
         } else if (angle_deg < 67) {
-            set_val(XB1_LX, 71);  // 100 / sqrt(2)
-            set_val(XB1_LY, 71);
+            set_val(XB1_LX, 71)  // 100 / sqrt(2)
+            set_val(XB1_LY, 71)
         } else if (angle_deg < 112) {
-            set_val(XB1_LX, 0);
-            set_val(XB1_LY, -100);
+            set_val(XB1_LX, 0)
+            set_val(XB1_LY, -100)
         } else if (angle_deg < 157) {
-            set_val(XB1_LX, -71);
-            set_val(XB1_LY, -71);
+            set_val(XB1_LX, -71)
+            set_val(XB1_LY, -71)
         } else if (angle_deg < 202) {
-            set_val(XB1_LX, -100);
-            set_val(XB1_LY, 0);
+            set_val(XB1_LX, -100)
+            set_val(XB1_LY, 0)
         } else if (angle_deg < 247) {
-            set_val(XB1_LX, -71);
-            set_val(XB1_LY, 71);
+            set_val(XB1_LX, -71)
+            set_val(XB1_LY, 71)
         } else if (angle_deg < 292) {
-            set_val(XB1_LX, 0);
-            set_val(XB1_LY, 100);
+            set_val(XB1_LX, 0)
+            set_val(XB1_LY, 100)
         } else {
-            set_val(XB1_LX, 71);
-            set_val(XB1_LY, 71);
+            set_val(XB1_LX, 71)
+            set_val(XB1_LY, 71)
         }
     }
 }
 
 function rapid_look_around_full_l(tolerance) {
 	if (abs(get_ival(XB1_LX)) > tolerance || abs(get_ival(XB1_LY)) > tolerance) {
-		set_polar(POLAR_LS, 0 - get_polar(POLAR_LS, POLAR_ANGLE), 32767);
+		set_polar(POLAR_LS, 0 - get_polar(POLAR_LS, POLAR_ANGLE), 32767)
 	}
 }
 
@@ -266,12 +266,12 @@ function set_right_triggers_threshold(threshold, threshold_small) {
 
 function getDirection(stick) {
 	if(get_val(stick) > 0) {
-		return 1;
+		return 1
 	} else if (get_val(stick) < 0) {
-		return -1;
+		return -1
 	}
 
-	return 0;
+	return 0
 }
 
 function isLeftAxisForward(min_intensity) {
@@ -291,49 +291,49 @@ function isLeftAxisRight(min_intensity) {
 }
 
 function onStartMenuHotkeyComboPressed() {
-	doActivateRadar = FALSE;
+	doActivateRadar = FALSE
 }
 
 
 function isRapidMultiPress(btA, btB) {
 	if(event_press(btA) && get_ptime(btB) <= 100 ||
 		event_press(btB) && get_ptime(btA) <= 100){
-		return TRUE;
+		return TRUE
 	}
 
-	return FALSE;
+	return FALSE
 }
 
 function isMultiPress(btA, btB) {
 	if((event_press(btB) && get_val(btA) > 0)
 	 || (event_press(btA) && get_val(btB) > 0)) {
-		return TRUE;
+		return TRUE
 	}
 
-	return FALSE;
+	return FALSE
 }
 
 function isMultiPressStickForward(bt, stick, sensitivity) {
 	if(event_press(bt) && get_val(stick) < sensitivity) {
-		return TRUE;
+		return TRUE
 	}
 
-	return FALSE;
+	return FALSE
 }
 
 function isMultiPressStickAnyDirection(bt, stick, sensitivity) {
 	if(event_press(bt) && (abs(get_val(stick)) >= sensitivity)) {
-		return TRUE;
+		return TRUE
 	}
-	return FALSE;
+	return FALSE
 }
 
 function useDeadzone(bt, deadzone) {
 	if(abs(get_val(bt)) >= deadzone) {
-		return get_val(bt);
+		return get_val(bt)
 	}
 
-	return 0;
+	return 0
 }
 
 function applyDeadzone(bt, deadzone) {
@@ -341,43 +341,43 @@ function applyDeadzone(bt, deadzone) {
 }
 
 combo l3 {
-	set_val(XB1_LS, 100);
-	wait(200);
-	set_val(XB1_LS, 0);
+	set_val(XB1_LS, 100)
+	wait(200)
+	set_val(XB1_LS, 0)
 }
 
 
 combo r3 {
-	set_val(XB1_RS, 100);
-	wait(50);
-	set_val(XB1_RS, 0);
+	set_val(XB1_RS, 100)
+	wait(50)
+	set_val(XB1_RS, 0)
 }
 
 combo a {
-	set_val(XB1_A, 100);
-	wait(50);
-	set_val(XB1_A, 0);
+	set_val(XB1_A, 100)
+	wait(50)
+	set_val(XB1_A, 0)
 }
 
 combo snipe {
-	set_val(XB1_RS, 100);
-	wait(50);
+	set_val(XB1_RS, 100)
+	wait(50)
 }
 
 combo OpenStartMenu {
-	set_val(PRESS_START, 100);
-	wait(200);
-	set_val(PRESS_START, 0);
+	set_val(PRESS_START, 100)
+	wait(200)
+	set_val(PRESS_START, 0)
 }
 
 combo OpenSelectMenu {
-	set_val(PRESS_SELECT, 100);
-	wait(200);
-	set_val(PRESS_SELECT, 0);
+	set_val(PRESS_SELECT, 100)
+	wait(200)
+	set_val(PRESS_SELECT, 0)
 }
 
 combo OpenHomeMenu {
-	set_val(PRESS_HOME, 100);
-	wait(200);
-	set_val(PRESS_HOME, 0);
+	set_val(PRESS_HOME, 100)
+	wait(200)
+	set_val(PRESS_HOME, 0)
 }
