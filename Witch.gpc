@@ -87,9 +87,6 @@ main {
 	set_left_triggers_threshold(10)
 	set_right_triggers_threshold(10, 1)
 
-	if(get_val(XB1_RY) > 5 || get_val(XB1_RY) < -5) set_val(XB1_LY, get_val(XB1_RY))
-	if(get_val(XB1_RX) > 5 || get_val(XB1_RX) < -5) set_val(XB1_LX, get_val(XB1_RX))
-
 	// Check if the left joystick has moved past an initial circular radius X
 	if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), START_AREA)) {
 		// Capture the direction and angle of the joystick
@@ -144,9 +141,11 @@ main {
 		applyDeadzone(XB1_LY, 5)
 		
 		rapid_look_around_full_l(10)
+		rapid_look_around_full_r(10)
 	}
-
-	set_val(TRACE_5, is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), 30))
+	
+	if(get_val(XB1_RY) > 5 || get_val(XB1_RY) < -5) set_val(XB1_LY, get_val(XB1_RY))
+	if(get_val(XB1_RX) > 5 || get_val(XB1_RX) < -5) set_val(XB1_LX, get_val(XB1_RX))
 
 	if (get_ival(GET_START)) {
 		set_val(XB1_A, 100)
@@ -157,7 +156,7 @@ main {
 	}
 	
 	if(get_ival(XB1_SHARE)) {
-		set_val (PRESS_SELECT, 100)
+		set_val(PRESS_SELECT, 100)
 	}
 }
 
@@ -220,6 +219,12 @@ function rapid_look_around_8_directions_l(tolerance) {
 function rapid_look_around_full_l(tolerance) {
 	if (abs(get_ival(XB1_LX)) > tolerance || abs(get_ival(XB1_LY)) > tolerance) {
 		set_polar(POLAR_LS, 0 - get_polar(POLAR_LS, POLAR_ANGLE), 32767)
+	}
+}
+
+function rapid_look_around_full_r(tolerance) {
+	if (abs(get_ival(XB1_RX)) > tolerance || abs(get_ival(XB1_RY)) > tolerance) {
+		set_polar(POLAR_RS, 0 - get_polar(POLAR_RS, POLAR_ANGLE), 32767)
 	}
 }
 
