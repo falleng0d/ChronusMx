@@ -23,6 +23,8 @@ define DIR_LEFT = -1;
 define DIR_RIGHT = 1;
 define true = TRUE;
 define false = FALSE;
+
+// ANGLE AUTO WALK RELATED
 define CANCEL_ANGLE = 150;
 define CHANGE_AREA = 20;
 define START_AREA = 20;
@@ -46,14 +48,6 @@ define PRESS_L1 = XB1_LB;
 // AUTO AIM
 define GET_AUTO_AIM = XB1_LB;
 define SET_AUTO_AIM = XB1_LB;
-
-// OTHERS
-int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX;
-int doStart, doSelect, doHome;
-int didStartAction;
-
-int isHoldingY, isComboRelease;
-int direction;
 
 // ANGLE AUTO WALK
 int angleDegree, isAutoWalkingAngle, walkDirectionAngleX, walkDirectionAngleY;
@@ -80,7 +74,6 @@ unmap XB1_RX;
 unmap XB1_RY;
 
 init {
-	direction = -1;
 	set_val(TRACE_6, 1);
 }
 
@@ -266,48 +259,9 @@ function isLeftAxisRight(min_intensity) {
 }
 
 function onStartMenuHotkeyComboPressed() {
-	doStart = FALSE;
 	doActivateRadar = FALSE;
 }
 
-function onStartMenu() {
-	isAutoWalkingY = FALSE;
-	isAutoWalkingX = FALSE;
-}
-
-function onSelectMenu() {
-	isAutoWalkingY = FALSE;
-	isAutoWalkingX = FALSE;
-}
-
-function onHomeMenu() {
-	isAutoWalkingY = FALSE;
-	isAutoWalkingX = FALSE;
-}
-
-function toggleAutoAimOnDoublePress(doublePressSpeed) {
-	if(!isAutoAiming && event_press(GET_L1)) {
-		taps = 3;
-	}
-	if(!isAutoAiming && taps >= 2) {
-		isAutoAiming = TRUE; //make isAutoRunning_00 true if false, false if true
-		isAutoAimJustStarted = TRUE;
-		isContinueAutoAimAfterReleaseSnipeButton = TRUE;
-		isDoContinueAutoAim = TRUE;
-		tapExpire = 0;
-		taps = 0;
-	// 	set_val(PRESS_L1, 0);
-	} else {
-		if (isAutoAiming && !isDoContinueAutoAim && event_release(GET_L1)) {
-			combo_stop(snipe);
-			isAutoAiming = FALSE;
-			taps = 0;
-			set_val(PRESS_L1, 0);
-		}
-	}
-
-	return isAutoAiming;
-}
 
 function isRapidMultiPress(btA, btB) {
 	if(event_press(btA) && get_ptime(btB) <= 100 ||
