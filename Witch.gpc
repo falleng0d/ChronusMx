@@ -137,10 +137,10 @@ main {
 		
 		set_polar(POLAR_LS, -angleDegree, 32767);
 	} else {
-		set_val(XB1_RX, useDeadzone(XB1_RX, 10))
-		set_val(XB1_RY, useDeadzone(XB1_RY, 10))
-		set_val(XB1_LX, useDeadzone(XB1_LX, 5))
-		set_val(XB1_LY, useDeadzone(XB1_LY, 5))
+		applyDeadzone(XB1_RX, 10);
+		applyDeadzone(XB1_RY, 10);
+		applyDeadzone(XB1_LX, 5);
+		applyDeadzone(XB1_LY, 5);
 		
 		rapid_look_arround_l(25);
 	}
@@ -302,6 +302,10 @@ function useDeadzone(bt, deadzone) {
 	}
 
 	return 0;
+}
+
+function applyDeadzone(bt, deadzone) {
+	set_val(bt, useDeadzone(bt, 10))
 }
 
 combo l3 {
