@@ -86,10 +86,10 @@ init {
 
 main {
 	adt_off(XB1_LT);
-    adt_off(XB1_RT);
+	adt_off(XB1_RT);
 	
 	set_left_triggers_threshold(10);
-    set_right_triggers_threshold(10, 1);
+	set_right_triggers_threshold(10, 1);
 	
 	if(get_val(XB1_SHARE)) set_val(PRESS_SELECT, 100);
 
@@ -164,13 +164,13 @@ main {
 
 	// Auto Walk
 	/*if(isAutoWalkingY) {
-		if((walkDirectionY == DIR_FORWARD && isLeftAxisBackward(60)) 
+		if((walkDirectionY == DIR_FORWARD && isLeftAxisBackward(60))
 			|| (walkDirectionY == DIR_BACKWARD && get_val(PS3_LY) < -60)) {
 			isAutoWalkingY = FALSE;
 		} else {
 			set_val(XB1_LY, 100 * walkDirectionY);
 		}
-	} else if (isMultiPressStickAnyDirection(GET_SELECT, PS3_LY, 30) || 
+	} else if (isMultiPressStickAnyDirection(GET_SELECT, PS3_LY, 30) ||
 				isMultiPressStickAnyDirection(XB1_SHARE, PS3_LY, 30)) {
 			isAutoWalkingY = TRUE;
 			walkDirectionY = getDirection(PS3_LY)
@@ -199,16 +199,16 @@ function rapid_look_arround_l(tolerance) {
 }
 
 function finger_trigger_left_analog(tolerance) {
-    if(get_val(XB1_LY) > tolerance) {
-        set_val(XB1_LY, 100)
-    } else if(get_val(XB1_LY) < -tolerance) {
-        set_val(XB1_LY, -100)
-    }
-    if(get_val(XB1_LX) > tolerance) {
-        set_val(XB1_LX, 100)
-    } else if(get_val(XB1_LX) < -tolerance) {
-        set_val(XB1_LX, -100)
-    }
+	if(get_val(XB1_LY) > tolerance) {
+		set_val(XB1_LY, 100)
+	} else if(get_val(XB1_LY) < -tolerance) {
+		set_val(XB1_LY, -100)
+	}
+	if(get_val(XB1_LX) > tolerance) {
+		set_val(XB1_LX, 100)
+	} else if(get_val(XB1_LX) < -tolerance) {
+		set_val(XB1_LX, -100)
+	}
 }
 
 function finger_trigger_right_analog(tolerance) {
@@ -225,15 +225,15 @@ function finger_trigger_right_analog(tolerance) {
 }
 
 function set_left_triggers_threshold(threshold) {
-    if(get_val(XB1_LB) < threshold) set_val(XB1_LB, 0) else set_val(XB1_LB, 100)
+	if(get_val(XB1_LB) < threshold) set_val(XB1_LB, 0) else set_val(XB1_LB, 100)
 	if(get_val(XB1_LT) < threshold) set_val(XB1_LT, 0) else set_val(XB1_LT, 100)
 }
 
 function set_right_triggers_threshold(threshold, threshold_small) {
-    // if XB1_LT is pressed(aiming), the threshold is smaller
-    if(get_val(XB1_LT) > threshold) {
-        threshold = threshold_small
-    }
+	// if XB1_LT is pressed(aiming), the threshold is smaller
+	if(get_val(XB1_LT) > threshold) {
+		threshold = threshold_small
+	}
 
 	if(get_val(XB1_RB) < threshold) set_val(XB1_RB, 0) else set_val(XB1_RB, 100)
 	if(get_val(XB1_RT) < threshold) set_val(XB1_RT, 0) else set_val(XB1_RT, 100)
@@ -351,43 +351,43 @@ function useDeadzone(bt, deadzone) {
 }
 
 combo l3 {
-    set_val(XB1_LS, 100);
-    wait(200);
-    set_val(XB1_LS, 0);
+	set_val(XB1_LS, 100);
+	wait(200);
+	set_val(XB1_LS, 0);
 }
 
 
 combo r3 {
-    set_val(XB1_RS, 100);
-    wait(50);
-    set_val(XB1_RS, 0);
+	set_val(XB1_RS, 100);
+	wait(50);
+	set_val(XB1_RS, 0);
 }
 
 combo a {
-    set_val(XB1_A, 100);
-    wait(50);
-    set_val(XB1_A, 0);
+	set_val(XB1_A, 100);
+	wait(50);
+	set_val(XB1_A, 0);
 }
 
 combo snipe {
-    set_val(XB1_RS, 100);
-    wait(50);
+	set_val(XB1_RS, 100);
+	wait(50);
 }
 
 combo OpenStartMenu {
-    set_val(PRESS_START, 100);
-    wait(200); 
-    set_val(PRESS_START, 0);
+	set_val(PRESS_START, 100);
+	wait(200);
+	set_val(PRESS_START, 0);
 }
 
 combo OpenSelectMenu {
-    set_val(PRESS_SELECT, 100);
-    wait(200); 
-    set_val(PRESS_SELECT, 0);
+	set_val(PRESS_SELECT, 100);
+	wait(200);
+	set_val(PRESS_SELECT, 0);
 }
 
 combo OpenHomeMenu {
-    set_val(PRESS_HOME, 100);
-    wait(200); 
-    set_val(PRESS_HOME, 0);
+	set_val(PRESS_HOME, 100);
+	wait(200);
+	set_val(PRESS_HOME, 0);
 }
