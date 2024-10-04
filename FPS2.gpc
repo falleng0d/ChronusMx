@@ -65,13 +65,12 @@ main {
 	set_left_triggers_threshold(1)
 	set_right_triggers_threshold(1, 1)
 	
-	// if(get_val(XB1_SHARE)) set_val(PRESS_SELECT, 100)
 	if(get_val(XB1_SHARE)) set_val(BTN_SHARE, 100)
 
 	// Rapid Look Arroud
 	rapid_look_around_full_l(10)
 
-	// Auto Aim (Toggle hold aim button to aim and quick tap to breathe)
+	// Auto Aim (Toggle hold aim button to aim and hold to breathe)
 	toggleAutoAimOnDoublePress(200)
 
 	// Auto Run
@@ -209,6 +208,10 @@ function onStartMenuHotkeyComboPressed() {
 	doActivateRadar = FALSE
 }
 
+function isWalking() {
+	return abs(get_val(XB1_LY)) > 20
+}
+
 function toggleAutoAimOnDoublePress(doublePressSpeed) {
 	if (isAutoAiming && !isDoContinueAutoAim) {
 		combo_stop(snipe)
@@ -244,9 +247,10 @@ function toggleAutoAimOnDoublePress(doublePressSpeed) {
 			isAutoAimJustStarted = FALSE
 		}
 	
-		// Auto Snipe
-		if(abs(get_val(XB1_LY)) < 20) { // if is not walking
-			if(get_ival(GET_AUTO_AIM)) { // Snipe Button Pressed
+		// Auto Snipe (aim button is now breathing button when holding)
+		if(!isWalking()) { // if is not walking
+			if(get_ival(GET_AUTO_AIM)) { // Snipe Button is hold
+				// Disable auto aim if snipe button is quickly released
 				if(get_ptime(GET_AUTO_AIM) < 250 && isAutoAimJustStarted == FALSE) {
 					isContinueAutoAimAfterReleaseSnipeButton = FALSE
 				} else {
