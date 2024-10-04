@@ -25,6 +25,8 @@ ps=(
     PS._RY
     PS._LX
     PS._LY
+    GET_L1
+    PRESS_L1
 )
 
 xb=(
@@ -49,6 +51,8 @@ xb=(
     XB1_RY
     XB1_LX
     XB1_LY
+    GET_LB
+    PRESS_LB
 )
 
 num_buttons=${#ps[@]}
