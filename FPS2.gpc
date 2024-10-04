@@ -9,23 +9,23 @@ define true = TRUE;
 define false = FALSE;
 
 // REMAPS
-define BTN_START = PS3_CROSS;
+define BTN_START = XB1_A;
 define PRESS_SELECT = XB1_PR2;
 define PRESS_START = XB1_PR1;
 define PRESS_HOME = XB1_PL1;
-define GET_SELECT = PS3_SELECT;
-define GET_START = PS3_START;
-define GET_HOME = PS3_PS;
-define XB_B = PS3_CIRCLE;
-define XB_A = PS3_CROSS;
-define XB_X = PS3_SQUARE;
-define XB_Y = PS3_TRIANGLE;
-define GET_L1 = PS3_L1;
-define PRESS_L1 = PS3_L1;
+define GET_SELECT = XB1_VIEW;
+define GET_START = XB1_MENU;
+define GET_HOME = XB1_XBOX;
+define XB_B = XB1_B;
+define XB_A = XB1_A;
+define XB_X = XB1_X;
+define XB_Y = XB1_Y;
+define GET_LB = XB1_LB;
+define PRESS_LB = XB1_LB;
 
 // AUTO AIM
-define GET_AUTO_AIM = PS3_L1;
-define SET_AUTO_AIM = PS3_L1;
+define GET_AUTO_AIM = XB1_LB;
+define SET_AUTO_AIM = XB1_LB;
 
 // OTHERS
 int doDisableAim;
@@ -39,20 +39,20 @@ int didStartAction;
 int isHoldingY, isComboRelease;
 int direction;
 
-remap PS3_START -> XB1_PR1;
-remap XB1_PR1 -> PS3_START;
+remap XB1_MENU -> XB1_PR1;
+remap XB1_PR1 -> XB1_MENU;
 
-// remap PS3_L1 -> TRACE_1;
-///remap TRACE_1 -> PS3_L1;
+// remap XB1_LB -> TRACE_1;
+///remap TRACE_1 -> XB1_LB;
 
 // PRESS HOME
-unmap PS3_PS;
-remap PS3_PS -> PS3_START
-// remap XB1_PL1 -> PS3_START;
+unmap XB1_XBOX;
+remap XB1_XBOX -> XB1_MENU
+// remap XB1_PL1 -> XB1_MENU;
 
 // PRESS SELECT
-remap PS3_SELECT -> XB1_PR2;
-remap XB1_PR2 -> PS3_SELECT;
+remap XB1_VIEW -> XB1_PR2;
+remap XB1_PR2 -> XB1_VIEW;
 
 // remap XB1_B -> XB1_A;
 // remap XB1_A -> XB1_B;
@@ -75,8 +75,8 @@ main {
 	set_val(XB1_LX, useDeadzone(XB1_LX, 10))
 	set_val(XB1_LY, useDeadzone(XB1_LY, 10))
 	
-    adt_off(PS5_L2);
-    adt_off(PS5_R2);
+    adt_off(XB1_LT);
+    adt_off(XB1_RT);
 
 	set_left_triggers_threshold(1);
     set_right_triggers_threshold(1, 1);
@@ -85,31 +85,31 @@ main {
 	if(get_val(XB1_SHARE)) set_val(XB1_X, 100);
 
 	// Rapid Look Arroud
-	if(get_val(PS3_LY) > 25) {
-		set_val(PS3_LY, 100)
-	} else if(get_val(PS3_LY) < -25) {
-		set_val(PS3_LY, -100)
+	if(get_val(XB1_LY) > 25) {
+		set_val(XB1_LY, 100)
+	} else if(get_val(XB1_LY) < -25) {
+		set_val(XB1_LY, -100)
 	}
-	if(get_val(PS3_LX) > 25) {
-		set_val(PS3_LX, 100)
-	} else if(get_val(PS3_LX) < -25) {
-		set_val(PS3_LX, -100)
+	if(get_val(XB1_LX) > 25) {
+		set_val(XB1_LX, 100)
+	} else if(get_val(XB1_LX) < -25) {
+		set_val(XB1_LX, -100)
 	}
 
 	// Auto Aim
-	// if(!isAutoAiming && event_release(GET_L1)) {
+	// if(!isAutoAiming && event_release(GET_LB)) {
 	// 	isAutoAiming = TRUE;
 	// 	isAutoAimJustStarted = TRUE;
 	// 	isContinueAutoAimAfterReleaseSnipeButton = TRUE;
 	// }
 
 	// if(isAutoAiming) {
-	// 	if (isAutoAimJustStarted == FALSE && get_ptime(GET_L1) < 250 && event_release(GET_L1)) {
+	// 	if (isAutoAimJustStarted == FALSE && get_ptime(GET_LB) < 250 && event_release(GET_LB)) {
 	// 		isAutoAiming = FALSE;
 	// 	}
 		
-	// 	swap(PS3_L1, TRACE_1);
-	// 	set_val(PRESS_L1, 100);
+	// 	swap(XB1_LB, TRACE_1);
+	// 	set_val(PRESS_LB, 100);
 		
 	// 	if (!get_val(TRACE_1)) {
 	// 		isAutoAimJustStarted = FALSE
@@ -121,7 +121,7 @@ main {
 	// 				isContinueAutoAimAfterReleaseSnipeButton = FALSE;
 	// 			} else { 
 	// 				isContinueAutoAimAfterReleaseSnipeButton = TRUE; 
-	// 				set_val(PS3_R3, 100);
+	// 				set_val(XB1_RS, 100);
 	// 			}
 				
 	// 			if(isContinueAutoAimAfterReleaseSnipeButton == FALSE) {
@@ -132,24 +132,24 @@ main {
 	// }
 
 	// if(toggleAutoAimOnDoublePress(200)) {
-	// 	//swap(TRACE_1, PS3_L1);
-	// 	//swap(GET_L1, TRACE_1);
-	// 	set_val(PRESS_L1, 100);
-	// 	if(get_ptime(GET_L1) < 250) { // L1 released for the first time after aim started
+	// 	//swap(TRACE_1, XB1_LB);
+	// 	//swap(GET_LB, TRACE_1);
+	// 	set_val(PRESS_LB, 100);
+	// 	if(get_ptime(GET_LB) < 250) { // L1 released for the first time after aim started
 	// 		isAutoAimJustStarted = FALSE;
 	// 	}
 
 	// 	// Auto Snipe
-	// 	if(abs(get_val(PS3_LY)) < 20) { // if is not walking
-	// 		if(get_val(GET_L1)){ // Snipe Button Pressed
-	// 			// set_val(PS3_R3, 100);
-	// 			if(get_ptime(GET_L1) < 250 && isAutoAimJustStarted == FALSE) { 
+	// 	if(abs(get_val(XB1_LY)) < 20) { // if is not walking
+	// 		if(get_val(GET_LB)){ // Snipe Button Pressed
+	// 			// set_val(XB1_RS, 100);
+	// 			if(get_ptime(GET_LB) < 250 && isAutoAimJustStarted == FALSE) { 
 	// 				isContinueAutoAimAfterReleaseSnipeButton = FALSE;
 	// 				// combo_run(l3);
 	// 			} else { 
 	// 				if (isAutoAimJustStarted == FALSE) {
 	// 					// combo_run(snipe);
-	// 					set_val(PS3_R3, 100);
+	// 					set_val(XB1_RS, 100);
 	// 				}
 	// 				isContinueAutoAimAfterReleaseSnipeButton = TRUE; 
 	// 			}
@@ -170,36 +170,36 @@ main {
 	// Auto Walk Y
 	if(isAutoWalkingY) {
 		if((walkDirectionY == DIR_FORWARD && isLeftAxisBackward(60)) 
-			|| (walkDirectionY == DIR_BACKWARD && get_val(PS3_LY) < -60)) {
+			|| (walkDirectionY == DIR_BACKWARD && get_val(XB1_LY) < -60)) {
 			isAutoWalkingY = FALSE;
 		} else {
 			set_val(XB1_LY, 100 * walkDirectionY);
 		}
 	} else {
-		if (isMultiPressStickAnyDirection(GET_SELECT, PS3_LY, 30)) {
+		if (isMultiPressStickAnyDirection(GET_SELECT, XB1_LY, 30)) {
 			isAutoWalkingY = TRUE;
-			walkDirectionY = getDirection(PS3_LY)
+			walkDirectionY = getDirection(XB1_LY)
 		}
 	}
 
 	// Auto Walk X
 	if(isAutoWalkingX) {
 		if((walkDirectionX == DIR_FORWARD && isLeftAxisRight(60)) 
-			|| (walkDirectionX == DIR_BACKWARD && get_val(PS3_LX) < -60)) {
+			|| (walkDirectionX == DIR_BACKWARD && get_val(XB1_LX) < -60)) {
 			isAutoWalkingX = FALSE;
 		} else {
 			set_val(XB1_LX, 100 * walkDirectionX);
 		}
 	} else {
-		if (isMultiPressStickAnyDirection(PS3_START, PS3_LX, 30)) {
+		if (isMultiPressStickAnyDirection(XB1_MENU, XB1_LX, 30)) {
 			isAutoWalkingX = TRUE;
-			walkDirectionX = getDirection(PS3_LX)
+			walkDirectionX = getDirection(XB1_LX)
 		}
 	}
 
 
 	// Toggle Lights
-	if(isMultiPress(PS3_SELECT, XB_B)) {
+	if(isMultiPress(XB1_VIEW, XB_B)) {
 		combo_run(r3);
 		doStart = FALSE;
 		doSelect = FALSE;
@@ -273,44 +273,44 @@ main {
 }
 
 function finger_trigger_left_analog(tolerance) {
-    if(get_val(PS4_LY) > tolerance) {
-        set_val(PS4_LY, 100)
-    } else if(get_val(PS4_LY) < -tolerance) {
-        set_val(PS4_LY, -100)
+    if(get_val(XB1_LY) > tolerance) {
+        set_val(XB1_LY, 100)
+    } else if(get_val(XB1_LY) < -tolerance) {
+        set_val(XB1_LY, -100)
     }
-    if(get_val(PS4_LX) > tolerance) {
-        set_val(PS4_LX, 100)
-    } else if(get_val(PS4_LX) < -tolerance) {
-        set_val(PS4_LX, -100)
+    if(get_val(XB1_LX) > tolerance) {
+        set_val(XB1_LX, 100)
+    } else if(get_val(XB1_LX) < -tolerance) {
+        set_val(XB1_LX, -100)
     }
 }
 
 function finger_trigger_right_analog(tolerance) {
-	if(get_val(PS4_RY) > tolerance) {
-		set_val(PS4_RY, 100)
-	} else if(get_val(PS4_RY) < -tolerance) {
-		set_val(PS4_RY, -100)
+	if(get_val(XB1_RY) > tolerance) {
+		set_val(XB1_RY, 100)
+	} else if(get_val(XB1_RY) < -tolerance) {
+		set_val(XB1_RY, -100)
 	}
-	if(get_val(PS4_RX) > tolerance) {
-		set_val(PS4_RX, 100)
-	} else if(get_val(PS4_RX) < -tolerance) {
-		set_val(PS4_RX, -100)
+	if(get_val(XB1_RX) > tolerance) {
+		set_val(XB1_RX, 100)
+	} else if(get_val(XB1_RX) < -tolerance) {
+		set_val(XB1_RX, -100)
 	}
 }
 
 function set_left_triggers_threshold(threshold) {
-    if(get_val(PS4_L1) < threshold) set_val(PS4_L1, 0) else set_val(PS4_L1, 100)
-	if(get_val(PS4_L2) < threshold) set_val(PS4_L2, 0) else set_val(PS4_L2, 100)
+    if(get_val(XB1_LB) < threshold) set_val(XB1_LB, 0) else set_val(XB1_LB, 100)
+	if(get_val(XB1_LT) < threshold) set_val(XB1_LT, 0) else set_val(XB1_LT, 100)
 }
 
 function set_right_triggers_threshold(threshold, threshold_small) {
-    // if PS4_L2 is pressed(aiming), the threshold is smaller
-    if(get_val(PS4_L2) > threshold) {
+    // if XB1_LT is pressed(aiming), the threshold is smaller
+    if(get_val(XB1_LT) > threshold) {
         threshold = threshold_small
     }
 
-	if(get_val(PS4_R1) < threshold) set_val(PS4_R1, 0) else set_val(PS4_R1, 100)
-	if(get_val(PS4_R2) < threshold) set_val(PS4_R2, 0) else set_val(PS4_R2, 100)
+	if(get_val(XB1_RB) < threshold) set_val(XB1_RB, 0) else set_val(XB1_RB, 100)
+	if(get_val(XB1_RT) < threshold) set_val(XB1_RT, 0) else set_val(XB1_RT, 100)
 }
 
 function getDirection(stick) {
@@ -324,19 +324,19 @@ function getDirection(stick) {
 }
 
 function isLeftAxisForward(min_intensity) {
-	return get_val(PS3_LY) < -min_intensity
+	return get_val(XB1_LY) < -min_intensity
 }
 
 function isLeftAxisBackward(min_intensity) {
-	return get_val(PS3_LY) >= min_intensity
+	return get_val(XB1_LY) >= min_intensity
 }
 
 function isLeftAxisLeft(min_intensity) {
-	return get_val(PS3_LX) < -min_intensity
+	return get_val(XB1_LX) < -min_intensity
 }
 
 function isLeftAxisRight(min_intensity) {
-	return get_val(PS3_LX) >= min_intensity
+	return get_val(XB1_LX) >= min_intensity
 }
 
 function onStartMenuHotkeyComboPressed() {
@@ -360,7 +360,7 @@ function onHomeMenu() {
 }
 
 function toggleAutoAimOnDoublePress(doublePressSpeed) {
-	if(!isAutoAiming && event_press(GET_L1)) {
+	if(!isAutoAiming && event_press(GET_LB)) {
 		taps = 3;
 	}
 	if(!isAutoAiming && taps >= 2) {
@@ -370,13 +370,13 @@ function toggleAutoAimOnDoublePress(doublePressSpeed) {
 		isDoContinueAutoAim = TRUE;
 		tapExpire = 0;
 		taps = 0;
-	// 	set_val(PRESS_L1, 0);
+	// 	set_val(PRESS_LB, 0);
 	} else {
-		if (isAutoAiming && !isDoContinueAutoAim && event_release(GET_L1)) {
+		if (isAutoAiming && !isDoContinueAutoAim && event_release(GET_LB)) {
 			combo_stop(snipe);
 			isAutoAiming = FALSE;
 			taps = 0;
-			set_val(PRESS_L1, 0);
+			set_val(PRESS_LB, 0);
 		}
 	}
 
@@ -425,16 +425,16 @@ function useDeadzone(bt, deadzone) {
 }
 
 combo l3 {
-    set_val(PS3_L3, 100);
+    set_val(XB1_LS, 100);
     wait(200);
-    set_val(PS3_L3, 0);
+    set_val(XB1_LS, 0);
 }
 
 
 combo r3 {
-    set_val(PS3_R3, 100);
+    set_val(XB1_RS, 100);
     wait(50);
-    set_val(PS3_R3, 0);
+    set_val(XB1_RS, 0);
 }
 
 combo a {
@@ -444,7 +444,7 @@ combo a {
 }
 
 combo snipe {
-    set_val(PS3_R3, 100);
+    set_val(XB1_RS, 100);
     wait(50);
 }
 
