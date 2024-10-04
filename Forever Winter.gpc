@@ -22,10 +22,9 @@ define GET_HOME = XB1_XBOX
 
 // AUTO AIM
 define GET_AUTO_AIM = XB1_LT
-
-// OTHERS
 int taps, tapExpire, isAutoAimJustStarted, isAutoAiming
 
+// AUTO WALK
 int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX
 
 // PRESS START
