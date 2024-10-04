@@ -22,18 +22,17 @@ define GET_HOME = XB1_XBOX
 
 // AUTO AIM
 define GET_AUTO_AIM = XB1_LT
+int taps, tapExpire, isAutoAimJustStarted, isAutoAiming, didSnipe
 
-// OTHERS
-int taps, tapExpire, isAutoAimJustStarted, isAutoAiming
-
-int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX
-int doStart, doSelect, doHome
+// AUTO WALK
+int walkDirectionY, isAutoWalkingY, isAutoRunning
 
 // PRESS START
 remap GET_START -> PRESS_START
 remap PRESS_START -> GET_START
 
 // PRESS SELECT
+int skipSelectUntilRelease
 remap GET_SELECT -> PRESS_SELECT
 remap PRESS_SELECT -> GET_SELECT
 
@@ -54,8 +53,6 @@ main {
 
 	set_left_triggers_threshold(1)
 	set_right_triggers_threshold(1, 1)
-	
-	if(get_val(XB1_SHARE)) set_val(BTN_SHARE, 100)
 
 	// Rapid Look Arroud
 	rapid_look_around_full_l(10)
@@ -67,6 +64,8 @@ main {
 	if (isAutoWalkingY) {
 		if(event_press(GET_SELECT)){
 			combo_run(l3)
+			skipSelectUntilRelease = TRUE
+			isAutoRunning = TRUE
 		}
 	}
 
@@ -75,28 +74,15 @@ main {
 		if((walkDirectionY == DIR_FORWARD && isLeftAxisBackward(60))
 			|| (walkDirectionY == DIR_BACKWARD && get_val(XB1_LY) < -60)) {
 			isAutoWalkingY = FALSE
+			isAutoRunning = FALSE
 		} else {
 			set_val(XB1_LY, 100 * walkDirectionY)
 		}
 	} else {
 		if (isMultiPressStickAnyDirection(GET_SELECT, XB1_LY, 30)) {
 			isAutoWalkingY = TRUE
+			skipSelectUntilRelease = TRUE
 			walkDirectionY = getDirection(XB1_LY)
-		}
-	}
-
-	// Auto Walk X
-	if(isAutoWalkingX) {
-		if((walkDirectionX == DIR_FORWARD && isLeftAxisRight(60))
-			|| (walkDirectionX == DIR_BACKWARD && get_val(XB1_LX) < -60)) {
-			isAutoWalkingX = FALSE
-		} else {
-			set_val(XB1_LX, 100 * walkDirectionX)
-		}
-	} else {
-		if (isMultiPressStickAnyDirection(XB1_MENU, XB1_LX, 30)) {
-			isAutoWalkingX = TRUE
-			walkDirectionX = getDirection(XB1_LX)
 		}
 	}
 
@@ -106,18 +92,47 @@ main {
 	}
 
 	// SELECT HOTKEY
-	if (get_val(GET_SELECT) == 100) {
+	if (event_release(GET_SELECT)) skipSelectUntilRelease = FALSE
+	if (get_val(GET_SELECT) == 100 && !skipSelectUntilRelease) {
 		set_val(BTN_SELECT, 100)
 	}
 
 	// HOME HOTKEY
 	if (get_val(GET_HOME)) {
 		set_val(BTN_HOME, 100)
+		isAutoWalkingY = FALSE
+		isAutoRunning = FALSE
+	}
+	
+	// SHARE HOTKEY
+	if(get_val(XB1_SHARE)) {
+		set_val(BTN_SHARE, 100)
 	}
 }
 
 function interpolate(val, inMin, inMax, outMin, outMax) {
-	return outMin + (outMax - outMin) * ((val - inMin) / (inMax - inMin))
+    if (val <= inMin) return outMin
+    if (val >= inMax) return outMax
+    
+    if (((val - inMin) * (outMax - outMin)) >= 0) {
+        return outMin + (((val - inMin) * (outMax - outMin)) + ((inMax - inMin) / 2)) / (inMax - inMin)
+    }
+	
+	return outMin + (((val - inMin) * (outMax - outMin)) - ((inMax - inMin) / 2)) / (inMax - inMin)
+}
+
+function interpolate_stick(stick_x, stick_y, deadzone, min_val, max_val) {
+	if (get_val(stick_x) > deadzone) {
+		set_val(stick_x, interpolate(get_val(stick_x), 1, 100, min_val, max_val))
+	} else if (get_val(stick_x) < -deadzone) {
+		set_val(stick_x, 0-interpolate(abs(get_val(stick_x)), 1, 100, min_val, max_val))
+	}
+	
+	if (get_val(stick_y) > deadzone) {
+		set_val(stick_y, interpolate(get_val(stick_y), 1, 100, min_val, max_val))
+	} else if (get_val(stick_y) < -deadzone) {
+		set_val(stick_y, 0-interpolate(abs(get_val(stick_y)), 1, 100, min_val, max_val))
+	}
 }
 
 function is_analog_outside_circle(x, y, radius) {
@@ -197,11 +212,6 @@ function isLeftAxisRight(min_intensity) {
 	return get_val(XB1_LX) >= min_intensity
 }
 
-function onStartMenuHotkeyComboPressed() {
-	doStart = FALSE
-	doActivateRadar = FALSE
-}
-
 function isWalking() {
 	return abs(get_val(XB1_LY)) > 20
 }
@@ -234,10 +244,13 @@ function toggleAutoAimOnDoublePress(doublePressSpeed) {
 			if (event_release(GET_AUTO_AIM) && get_ptime(GET_AUTO_AIM) < 250) {
 				combo_stop(snipe)
 				isAutoAiming = FALSE
-			} else if (get_ival(GET_AUTO_AIM)) {
+			} else if (get_ival(GET_AUTO_AIM) && get_ptime(GET_AUTO_AIM) > 250 && !didSnipe) {
 				// Snipe Button is held
-				set_val(XB1_RS, 100)
+				combo_run(snipe)
+				didSnipe = TRUE
 			}
+			
+			if(event_release(GET_AUTO_AIM) && didSnipe) didSnipe = FALSE
 		}
 		
 		// L1 released for the first time after aim started
