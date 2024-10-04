@@ -27,7 +27,6 @@ define GET_AUTO_AIM = XB1_LT
 int taps, tapExpire, isAutoAimJustStarted, isAutoAiming
 
 int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX
-int doStart, doSelect, doHome
 
 // PRESS START
 remap GET_START -> PRESS_START
@@ -222,11 +221,6 @@ function isLeftAxisLeft(min_intensity) {
 
 function isLeftAxisRight(min_intensity) {
 	return get_val(XB1_LX) >= min_intensity
-}
-
-function onStartMenuHotkeyComboPressed() {
-	doStart = FALSE
-	doActivateRadar = FALSE
 }
 
 function isWalking() {
