@@ -27,14 +27,8 @@ int taps, tapExpire, isAutoAimJustStarted, isAutoAiming, didSnipe
 // AUTO WALK
 int walkDirectionY, isAutoWalkingY, isAutoRunning
 
-// PRESS START
-remap GET_START -> PRESS_START
-remap PRESS_START -> GET_START
-
 // PRESS SELECT
 int skipSelectUntilRelease
-remap GET_SELECT -> PRESS_SELECT
-remap PRESS_SELECT -> GET_SELECT
 
 // PRESS HOME
 unmap XB1_XBOX
@@ -88,15 +82,19 @@ main {
 
 	// START HOTKEY
 	if (get_val(GET_START) == 100) {
-		set_val(BTN_START, 100)
+		set_val(GET_START, 0)
+		set_val(PRESS_START, 100)
 	}
 
 	// SELECT HOTKEY
 	if (event_release(GET_SELECT)) skipSelectUntilRelease = FALSE
-	if (get_val(GET_SELECT) == 100 && !skipSelectUntilRelease) {
-		set_val(BTN_SELECT, 100)
+	if (get_val(GET_SELECT) == 100) {
+		set_val(GET_SELECT, 0)
+		if (!skipSelectUntilRelease) {
+			set_val(PRESS_SELECT, 100)
+		}
 	}
-
+	
 	// HOME HOTKEY
 	if (get_val(GET_HOME)) {
 		set_val(PRESS_HOME, 100)
