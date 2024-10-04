@@ -116,6 +116,10 @@ main {
 	}
 }
 
+function interpolate(val, inMin, inMax, outMin, outMax) {
+	return outMin + (outMax - outMin) * ((val - inMin) / (inMax - inMin))
+}
+
 function is_analog_outside_circle(x, y, radius) {
 	return (x * x + y * y) > radius * radius
 }
