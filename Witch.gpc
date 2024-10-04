@@ -51,7 +51,7 @@ define GET_AUTO_AIM = XB1_LB
 define SET_AUTO_AIM = XB1_LB
 
 // ANGLE AUTO WALK
-int angleDegree, isAutoWalkingAngle, walkDirectionAngleX, walkDirectionAngleY
+int angleDegree, isAutoWalkingAngle
 int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
 int autoWalkAngleCancelationKey
 
@@ -85,10 +85,10 @@ init {
 main {
 	adt_off(XB1_LT)
 	adt_off(XB1_RT)
-	
+
 	set_left_triggers_threshold(10)
 	set_right_triggers_threshold(10, 1)
-	
+
 	if(isAutoWalkingAngle) {
 		if (event_press(GET_HOME)) {
 			autoWalkAngleCancelationKey = GET_HOME
@@ -99,7 +99,7 @@ main {
 			isAutoWalkingAngle = FALSE
 		}
 	}
-	
+
 	if(autoWalkAngleCancelationKey) {
 		if(event_release(autoWalkAngleCancelationKey)) {
 			autoWalkAngleCancelationKey = 0
@@ -153,20 +153,20 @@ main {
 				set_val(TRACE_1, angleDegree)
 			}
 		}
-		
+
 		set_polar(POLAR_LS, -angleDegree, MAX_RADIUS)
 	} else {
 		applyDeadzone(XB1_RX, 10)
 		applyDeadzone(XB1_RY, 10)
-		
+
 		if (is_analog_inside_circle(get_val(XB1_RX), get_val(XB1_RY), 10)) {
 			applyDeadzone(XB1_LX, 5)
 			applyDeadzone(XB1_LY, 5)
-			
+
 			rapid_look_around_full_l(10)
 		}
 	}
-	
+
 	rapid_look_around_full(10, get_val(XB1_RX), get_val(XB1_RY), POLAR_RS, POLAR_LS)
 
 	if (get_ival(GET_START)) {
@@ -176,7 +176,7 @@ main {
 	if (get_ival(GET_SELECT)) {
 		set_val(XB1_B, 100)
 	}
-	
+
 	if(get_ival(XB1_SHARE)) {
 		set_val(PRESS_SELECT, 100)
 	}
@@ -209,10 +209,10 @@ function rapid_look_arround_l(tolerance) {
 
 function rapid_look_around_8_directions_l(tolerance) {
 	set_val(TRACE_6, get_polar(POLAR_LS, POLAR_ANGLE))
-	
+
     if (is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), tolerance)) {
         angle_deg = get_polar(POLAR_LS, POLAR_ANGLE)
-        
+
         // Determine which of the 8 directions is closest
         if (angle_deg < 22 || angle_deg >= 337) {
             set_val(XB1_LX, 100)
@@ -330,7 +330,6 @@ function isLeftAxisRight(min_intensity) {
 function onStartMenuHotkeyComboPressed() {
 	doActivateRadar = FALSE
 }
-
 
 function isRapidMultiPress(btA, btB) {
 	if(event_press(btA) && get_ptime(btB) <= 100 ||
