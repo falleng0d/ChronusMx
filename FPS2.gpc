@@ -1,72 +1,72 @@
 // UTILITIES
-define FORWARD = -40;
-define BACKWARD = 40;
-define DIR_FORWARD = -1;
-define DIR_BACKWARD = 1;
-define DIR_LEFT = -1;
-define DIR_RIGHT = 1;
-define true = TRUE;
-define false = FALSE;
+define FORWARD = -40
+define BACKWARD = 40
+define DIR_FORWARD = -1
+define DIR_BACKWARD = 1
+define DIR_LEFT = -1
+define DIR_RIGHT = 1
+define true = TRUE
+define false = FALSE
 
 // REMAPS
-define BTN_START = XB1_A;
-define PRESS_SELECT = XB1_PR2;
-define PRESS_START = XB1_PR1;
-define PRESS_HOME = XB1_PL1;
-define GET_SELECT = XB1_VIEW;
-define GET_START = XB1_MENU;
-define GET_HOME = XB1_XBOX;
-define XB_B = XB1_B;
-define XB_A = XB1_A;
-define XB_X = XB1_X;
-define XB_Y = XB1_Y;
-define GET_LB = XB1_LB;
-define PRESS_LB = XB1_LB;
+define BTN_START = XB1_A
+define PRESS_SELECT = XB1_PR2
+define PRESS_START = XB1_PR1
+define PRESS_HOME = XB1_PL1
+define GET_SELECT = XB1_VIEW
+define GET_START = XB1_MENU
+define GET_HOME = XB1_XBOX
+define XB_B = XB1_B
+define XB_A = XB1_A
+define XB_X = XB1_X
+define XB_Y = XB1_Y
+define GET_LB = XB1_LB
+define PRESS_LB = XB1_LB
 
 // AUTO AIM
-define GET_AUTO_AIM = XB1_LB;
-define SET_AUTO_AIM = XB1_LB;
+define GET_AUTO_AIM = XB1_LB
+define SET_AUTO_AIM = XB1_LB
 
 // OTHERS
-int doDisableAim;
-int taps, tapExpire, isAutoAimJustStarted, isContinueAutoAimAfterReleaseSnipeButton;
-int isAutoAiming, isDoContinueAutoAim, snipeTime;
+int doDisableAim
+int taps, tapExpire, isAutoAimJustStarted, isContinueAutoAimAfterReleaseSnipeButton
+int isAutoAiming, isDoContinueAutoAim, snipeTime
 
-int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX;
-int doStart, doSelect, doHome;
-int didStartAction;
+int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX
+int doStart, doSelect, doHome
+int didStartAction
 
-int isHoldingY, isComboRelease;
-int direction;
+int isHoldingY, isComboRelease
+int direction
 
-remap XB1_MENU -> XB1_PR1;
-remap XB1_PR1 -> XB1_MENU;
+remap XB1_MENU -> XB1_PR1
+remap XB1_PR1 -> XB1_MENU
 
-// remap XB1_LB -> TRACE_1;
-///remap TRACE_1 -> XB1_LB;
+// remap XB1_LB -> TRACE_1
+///remap TRACE_1 -> XB1_LB
 
 // PRESS HOME
-unmap XB1_XBOX;
+unmap XB1_XBOX
 remap XB1_XBOX -> XB1_MENU
-// remap XB1_PL1 -> XB1_MENU;
+// remap XB1_PL1 -> XB1_MENU
 
 // PRESS SELECT
-remap XB1_VIEW -> XB1_PR2;
-remap XB1_PR2 -> XB1_VIEW;
+remap XB1_VIEW -> XB1_PR2
+remap XB1_PR2 -> XB1_VIEW
 
-// remap XB1_B -> XB1_A;
-// remap XB1_A -> XB1_B;
+// remap XB1_B -> XB1_A
+// remap XB1_A -> XB1_B
 
 // PRESS SHARE
-unmap XB1_SHARE;
+unmap XB1_SHARE
 
 init {
-	direction = -1;
-	doDisableAim = TRUE;
-	isDoContinueAutoAim = FALSE;
-	snipeTime = 0;
-	isContinueAutoAimAfterReleaseSnipeButton = TRUE;
-	didStartAction = FALSE;
+	direction = -1
+	doDisableAim = TRUE
+	isDoContinueAutoAim = FALSE
+	snipeTime = 0
+	isContinueAutoAimAfterReleaseSnipeButton = TRUE
+	didStartAction = FALSE
 }
 
 main {
@@ -75,14 +75,14 @@ main {
 	set_val(XB1_LX, useDeadzone(XB1_LX, 10))
 	set_val(XB1_LY, useDeadzone(XB1_LY, 10))
 	
-    adt_off(XB1_LT);
-    adt_off(XB1_RT);
+    adt_off(XB1_LT)
+    adt_off(XB1_RT)
 
-	set_left_triggers_threshold(1);
-    set_right_triggers_threshold(1, 1);
+	set_left_triggers_threshold(1)
+    set_right_triggers_threshold(1, 1)
 	
-	// if(get_val(XB1_SHARE)) set_val(PRESS_SELECT, 100);
-	if(get_val(XB1_SHARE)) set_val(XB1_X, 100);
+	// if(get_val(XB1_SHARE)) set_val(PRESS_SELECT, 100)
+	if(get_val(XB1_SHARE)) set_val(XB1_X, 100)
 
 	// Rapid Look Arroud
 	if(get_val(XB1_LY) > 25) {
@@ -98,18 +98,18 @@ main {
 
 	// Auto Aim
 	// if(!isAutoAiming && event_release(GET_LB)) {
-	// 	isAutoAiming = TRUE;
-	// 	isAutoAimJustStarted = TRUE;
-	// 	isContinueAutoAimAfterReleaseSnipeButton = TRUE;
+	// 	isAutoAiming = TRUE
+	// 	isAutoAimJustStarted = TRUE
+	// 	isContinueAutoAimAfterReleaseSnipeButton = TRUE
 	// }
 
 	// if(isAutoAiming) {
 	// 	if (isAutoAimJustStarted == FALSE && get_ptime(GET_LB) < 250 && event_release(GET_LB)) {
-	// 		isAutoAiming = FALSE;
+	// 		isAutoAiming = FALSE
 	// 	}
 		
-	// 	swap(XB1_LB, TRACE_1);
-	// 	set_val(PRESS_LB, 100);
+	// 	swap(XB1_LB, TRACE_1)
+	// 	set_val(PRESS_LB, 100)
 		
 	// 	if (!get_val(TRACE_1)) {
 	// 		isAutoAimJustStarted = FALSE
@@ -118,43 +118,43 @@ main {
 	// 	if(isAutoAimJustStarted == FALSE) {
 	// 		if(get_val(TRACE_1)) {
 	// 			if(get_ptime(TRACE_1) < 250) { 
-	// 				isContinueAutoAimAfterReleaseSnipeButton = FALSE;
+	// 				isContinueAutoAimAfterReleaseSnipeButton = FALSE
 	// 			} else { 
 	// 				isContinueAutoAimAfterReleaseSnipeButton = TRUE; 
-	// 				set_val(XB1_RS, 100);
+	// 				set_val(XB1_RS, 100)
 	// 			}
 				
 	// 			if(isContinueAutoAimAfterReleaseSnipeButton == FALSE) {
-	// 				//isAutoAiming = FALSE;
+	// 				//isAutoAiming = FALSE
 	// 			}
 	// 		}
 	// 	}
 	// }
 
 	// if(toggleAutoAimOnDoublePress(200)) {
-	// 	//swap(TRACE_1, XB1_LB);
-	// 	//swap(GET_LB, TRACE_1);
-	// 	set_val(PRESS_LB, 100);
+	// 	//swap(TRACE_1, XB1_LB)
+	// 	//swap(GET_LB, TRACE_1)
+	// 	set_val(PRESS_LB, 100)
 	// 	if(get_ptime(GET_LB) < 250) { // L1 released for the first time after aim started
-	// 		isAutoAimJustStarted = FALSE;
+	// 		isAutoAimJustStarted = FALSE
 	// 	}
 
 	// 	// Auto Snipe
 	// 	if(abs(get_val(XB1_LY)) < 20) { // if is not walking
 	// 		if(get_val(GET_LB)){ // Snipe Button Pressed
-	// 			// set_val(XB1_RS, 100);
+	// 			// set_val(XB1_RS, 100)
 	// 			if(get_ptime(GET_LB) < 250 && isAutoAimJustStarted == FALSE) { 
-	// 				isContinueAutoAimAfterReleaseSnipeButton = FALSE;
-	// 				// combo_run(l3);
+	// 				isContinueAutoAimAfterReleaseSnipeButton = FALSE
+	// 				// combo_run(l3)
 	// 			} else { 
 	// 				if (isAutoAimJustStarted == FALSE) {
-	// 					// combo_run(snipe);
-	// 					set_val(XB1_RS, 100);
+	// 					// combo_run(snipe)
+	// 					set_val(XB1_RS, 100)
 	// 				}
 	// 				isContinueAutoAimAfterReleaseSnipeButton = TRUE; 
 	// 			}
 	// 		} else {
-	// 			// combo_stop(snipe);
+	// 			// combo_stop(snipe)
 	// 			isDoContinueAutoAim = isContinueAutoAimAfterReleaseSnipeButton
 	// 		}
 	// 	}
@@ -163,7 +163,7 @@ main {
 	// Auto Run
 	if (isAutoWalkingY) {
 		if(event_press(GET_SELECT)){
-			combo_run(l3);
+			combo_run(l3)
 		}
 	}
 
@@ -171,13 +171,13 @@ main {
 	if(isAutoWalkingY) {
 		if((walkDirectionY == DIR_FORWARD && isLeftAxisBackward(60)) 
 			|| (walkDirectionY == DIR_BACKWARD && get_val(XB1_LY) < -60)) {
-			isAutoWalkingY = FALSE;
+			isAutoWalkingY = FALSE
 		} else {
-			set_val(XB1_LY, 100 * walkDirectionY);
+			set_val(XB1_LY, 100 * walkDirectionY)
 		}
 	} else {
 		if (isMultiPressStickAnyDirection(GET_SELECT, XB1_LY, 30)) {
-			isAutoWalkingY = TRUE;
+			isAutoWalkingY = TRUE
 			walkDirectionY = getDirection(XB1_LY)
 		}
 	}
@@ -186,13 +186,13 @@ main {
 	if(isAutoWalkingX) {
 		if((walkDirectionX == DIR_FORWARD && isLeftAxisRight(60)) 
 			|| (walkDirectionX == DIR_BACKWARD && get_val(XB1_LX) < -60)) {
-			isAutoWalkingX = FALSE;
+			isAutoWalkingX = FALSE
 		} else {
-			set_val(XB1_LX, 100 * walkDirectionX);
+			set_val(XB1_LX, 100 * walkDirectionX)
 		}
 	} else {
 		if (isMultiPressStickAnyDirection(XB1_MENU, XB1_LX, 30)) {
-			isAutoWalkingX = TRUE;
+			isAutoWalkingX = TRUE
 			walkDirectionX = getDirection(XB1_LX)
 		}
 	}
@@ -200,50 +200,50 @@ main {
 
 	// Toggle Lights
 	if(isMultiPress(XB1_VIEW, XB_B)) {
-		combo_run(r3);
-		doStart = FALSE;
-		doSelect = FALSE;
+		combo_run(r3)
+		doStart = FALSE
+		doSelect = FALSE
 	}
 
 	// START HOTKEY + BUTTON
 	//if (event_release(GET_START)) {
 	//	if (doStart) {
-	//		doStart = FALSE;
-	//		// onStartMenu();
+	//		doStart = FALSE
+	//		// onStartMenu()
 	//		combo_run(r3)
 	//	} else {
-	//		combo_run(a);
+	//		combo_run(a)
 	//	}
 	//} else if (get_val(GET_START) == 100) {
 	//	if (get_ptime(GET_START) > 200) {
-	//		doStart = TRUE;
+	//		doStart = TRUE
 	//	} else {
 	//		// set_val(XB1_A, 100)
 	//	}
 	//}
 	if (get_val(GET_START) == 100 && get_ptime(GET_START) > 200 && !didStartAction) {
-		combo_run(r3);
-		didStartAction = TRUE;
+		combo_run(r3)
+		didStartAction = TRUE
 	} else if (event_release(GET_START)) {
 		if(didStartAction) {
-			didStartAction = FALSE;
+			didStartAction = FALSE
 		} else {
-			combo_run(a);
+			combo_run(a)
 		}
 	}
 
 	// SELECT HOTKEY + BUTTON
 	if (event_release(GET_SELECT)) {
 		if (doSelect) {
-			doSelect = FALSE;
-			onSelectMenu();
-			combo_run(OpenStartMenu);
+			doSelect = FALSE
+			onSelectMenu()
+			combo_run(OpenStartMenu)
 		} else if (isAutoWalkingY == FALSE && isAutoWalkingX == FALSE) {
 			set_val(XB_A, 100)
 		}
 	} else if (get_val(GET_SELECT) == 100 && isAutoWalkingY == FALSE && isAutoWalkingX == FALSE) {
 		if (get_ptime(GET_SELECT) > 400) {
-		 	// doSelect = TRUE;
+		 	// doSelect = TRUE
 		 	set_val(XB_A, 100)
 		} else {
 			set_val(XB_A, 100)
@@ -252,20 +252,20 @@ main {
 
 	// HOME HOTKEY + BUTTON
 	if (get_val(GET_HOME)) {
-		set_val(PRESS_HOME, 100);
+		set_val(PRESS_HOME, 100)
 	}
 
 	// if (event_release(GET_HOME)) {
 	// 	if (doHome) {
-	// 		doHome = FALSE;
-	// 		onHomeMenu();
-	// 		combo_run(OpenHomeMenu);
+	// 		doHome = FALSE
+	// 		onHomeMenu()
+	// 		combo_run(OpenHomeMenu)
 	// 	} else {
 	// 		set_val(XB_X, 100)
 	// 	}
 	// } else if (get_val(GET_HOME) == 100) {
 	// 	// if (get_ptime(GET_HOME) > 400) {
-	// 	// 	doHome = TRUE;
+	// 	// 	doHome = TRUE
 	// 	// } else {
 	// 	// 	set_val(XB_X, 100)
 	// 	// }
@@ -315,12 +315,12 @@ function set_right_triggers_threshold(threshold, threshold_small) {
 
 function getDirection(stick) {
 	if(get_val(stick) > 0) {
-		return 1;
+		return 1
 	} else if (get_val(stick) < 0) {
-		return -1;
+		return -1
 	}
 
-	return 0;
+	return 0
 }
 
 function isLeftAxisForward(min_intensity) {
@@ -340,128 +340,128 @@ function isLeftAxisRight(min_intensity) {
 }
 
 function onStartMenuHotkeyComboPressed() {
-	doStart = FALSE;
-	doActivateRadar = FALSE;
+	doStart = FALSE
+	doActivateRadar = FALSE
 }
 
 function onStartMenu() {
-	isAutoWalkingY = FALSE;
-	isAutoWalkingX = FALSE;
+	isAutoWalkingY = FALSE
+	isAutoWalkingX = FALSE
 }
 
 function onSelectMenu() {
-	isAutoWalkingY = FALSE;
-	isAutoWalkingX = FALSE;
+	isAutoWalkingY = FALSE
+	isAutoWalkingX = FALSE
 }
 
 function onHomeMenu() {
-	isAutoWalkingY = FALSE;
-	isAutoWalkingX = FALSE;
+	isAutoWalkingY = FALSE
+	isAutoWalkingX = FALSE
 }
 
 function toggleAutoAimOnDoublePress(doublePressSpeed) {
 	if(!isAutoAiming && event_press(GET_LB)) {
-		taps = 3;
+		taps = 3
 	}
 	if(!isAutoAiming && taps >= 2) {
 		isAutoAiming = TRUE; //make isAutoRunning_00 true if false, false if true
-		isAutoAimJustStarted = TRUE;
-		isContinueAutoAimAfterReleaseSnipeButton = TRUE;
-		isDoContinueAutoAim = TRUE;
-		tapExpire = 0;
-		taps = 0;
-	// 	set_val(PRESS_LB, 0);
+		isAutoAimJustStarted = TRUE
+		isContinueAutoAimAfterReleaseSnipeButton = TRUE
+		isDoContinueAutoAim = TRUE
+		tapExpire = 0
+		taps = 0
+	// 	set_val(PRESS_LB, 0)
 	} else {
 		if (isAutoAiming && !isDoContinueAutoAim && event_release(GET_LB)) {
-			combo_stop(snipe);
-			isAutoAiming = FALSE;
-			taps = 0;
-			set_val(PRESS_LB, 0);
+			combo_stop(snipe)
+			isAutoAiming = FALSE
+			taps = 0
+			set_val(PRESS_LB, 0)
 		}
 	}
 
-	return isAutoAiming;
+	return isAutoAiming
 }
 
 function isRapidMultiPress(btA, btB) {
 	if(event_press(btA) && get_ptime(btB) <= 100 ||
 		event_press(btB) && get_ptime(btA) <= 100){
-		return TRUE;
+		return TRUE
 	}
 
-	return FALSE;
+	return FALSE
 }
 
 function isMultiPress(btA, btB) {
 	if((event_press(btB) && get_val(btA) > 0)
 	 || (event_press(btA) && get_val(btB) > 0)) {
-		return TRUE;
+		return TRUE
 	}
 
-	return FALSE;
+	return FALSE
 }
 
 function isMultiPressStickForward(bt, stick, sensitivity) {
 	if(event_press(bt) && get_val(stick) < sensitivity) {
-		return TRUE;
+		return TRUE
 	}
 
-	return FALSE;
+	return FALSE
 }
 
 function isMultiPressStickAnyDirection(bt, stick, sensitivity) {
 	if(event_press(bt) && (abs(get_val(stick)) >= sensitivity)) {
-		return TRUE;
+		return TRUE
 	}
-	return FALSE;
+	return FALSE
 }
 
 function useDeadzone(bt, deadzone) {
 	if(abs(get_val(bt)) >= deadzone) {
-		return get_val(bt);
+		return get_val(bt)
 	}
 
-	return 0;
+	return 0
 }
 
 combo l3 {
-    set_val(XB1_LS, 100);
-    wait(200);
-    set_val(XB1_LS, 0);
+    set_val(XB1_LS, 100)
+    wait(200)
+    set_val(XB1_LS, 0)
 }
 
 
 combo r3 {
-    set_val(XB1_RS, 100);
-    wait(50);
-    set_val(XB1_RS, 0);
+    set_val(XB1_RS, 100)
+    wait(50)
+    set_val(XB1_RS, 0)
 }
 
 combo a {
-    set_val(XB1_A, 100);
-    wait(50);
-    set_val(XB1_A, 0);
+    set_val(XB1_A, 100)
+    wait(50)
+    set_val(XB1_A, 0)
 }
 
 combo snipe {
-    set_val(XB1_RS, 100);
-    wait(50);
+    set_val(XB1_RS, 100)
+    wait(50)
 }
 
 combo OpenStartMenu {
-    set_val(PRESS_START, 100);
+    set_val(PRESS_START, 100)
     wait(200); 
-    set_val(PRESS_START, 0);
+    set_val(PRESS_START, 0)
 }
 
 combo OpenSelectMenu {
-    set_val(PRESS_SELECT, 100);
+    set_val(PRESS_SELECT, 100)
     wait(200); 
-    set_val(PRESS_SELECT, 0);
+    set_val(PRESS_SELECT, 0)
 }
 
 combo OpenHomeMenu {
-    set_val(PRESS_HOME, 100);
+    set_val(PRESS_HOME, 100)
     wait(200); 
-    set_val(PRESS_HOME, 0);
+    set_val(PRESS_HOME, 0)
 }
