@@ -170,7 +170,11 @@ main {
 	rapid_look_around_full(10, get_val(XB1_RX), get_val(XB1_RY), POLAR_RS, POLAR_LS)
 
 	if (get_ival(GET_START)) {
-		set_val(XB1_A, 100)
+		if (get_ptime(GET_START) > 400) {
+			combo_run(rapid_fire_a)
+		} else {
+			set_val(XB1_A, 100)
+		}
 	}
 
 	if (get_ival(GET_SELECT)) {
@@ -389,7 +393,7 @@ combo r3 {
 	set_val(XB1_RS, 0)
 }
 
-combo a {
+combo rapid_fire_a {
 	set_val(XB1_A, 100)
 	wait(50)
 	set_val(XB1_A, 0)
