@@ -12,8 +12,8 @@ define MAX_RADIUS = 32767
 // REMAPS
 define BTN_START = XB1_A
 define BTN_SELECT = XB1_B
-define BTN_HOME = XB1_Y
-define BTN_SHARE = XB1_X
+define BTN_HOME = XB1_PR2
+define BTN_SHARE = XB1_PR1
 define PRESS_SELECT = XB1_PR2
 define PRESS_START = XB1_PR1
 define GET_SELECT = XB1_VIEW
@@ -44,10 +44,16 @@ unmap XB1_XBOX
 unmap XB1_SHARE
 
 main {
-	set_val(XB1_RX, useDeadzone(XB1_RX, 10))
-	set_val(XB1_RY, useDeadzone(XB1_RY, 10))
-	set_val(XB1_LX, useDeadzone(XB1_LX, 10))
-	set_val(XB1_LY, useDeadzone(XB1_LY, 10))
+	// set_val(XB1_RX, useDeadzone(XB1_RX, 5))
+	// set_val(XB1_RY, useDeadzone(XB1_RY, 5))
+	if (get_val(XB1_LT) > 0) {
+		interpolate_stick_r(5, 20, 50)
+	} else {
+		interpolate_stick_r(5, 20, 60)
+	}
+	
+	set_val(XB1_LX, useDeadzone(XB1_LX, 5))
+	set_val(XB1_LY, useDeadzone(XB1_LY, 5))
 	
 	adt_off(XB1_LT)
 	adt_off(XB1_RT)
@@ -117,7 +123,28 @@ main {
 }
 
 function interpolate(val, inMin, inMax, outMin, outMax) {
-	return outMin + (outMax - outMin) * ((val - inMin) / (inMax - inMin))
+    if (val <= inMin) return outMin
+    if (val >= inMax) return outMax
+    
+    if (((val - inMin) * (outMax - outMin)) >= 0) {
+        return outMin + (((val - inMin) * (outMax - outMin)) + ((inMax - inMin) / 2)) / (inMax - inMin)
+    }
+	
+	return outMin + (((val - inMin) * (outMax - outMin)) - ((inMax - inMin) / 2)) / (inMax - inMin)
+}
+
+function interpolate_stick_r(deadzone, min_val, max_val) {
+	if (get_val(XB1_RX) > deadzone) {
+		set_val(XB1_RX, interpolate(get_val(XB1_RX), 1, 100, min_val, max_val))
+	} else if (get_val(XB1_RX) < -deadzone) {
+		set_val(XB1_RX, 0-interpolate(abs(get_val(XB1_RX)), 1, 100, min_val, max_val))
+	}
+	
+	if (get_val(XB1_RY) > deadzone) {
+		set_val(XB1_RY, interpolate(get_val(XB1_RY), 1, 100, min_val, max_val))
+	} else if (get_val(XB1_RY) < -deadzone) {
+		set_val(XB1_RY, 0-interpolate(abs(get_val(XB1_RY)), 1, 100, min_val, max_val))
+	}
 }
 
 function is_analog_outside_circle(x, y, radius) {
