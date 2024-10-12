@@ -9,6 +9,7 @@ define true = TRUE
 define false = FALSE
 define L_STICK_TOLERANCE = 5
 define DEADZONE = 5
+define MAX_RADIUS = 32767
 
 // REMAPS
 define BTN_START = XB1_A
@@ -83,19 +84,10 @@ main {
 	set_left_triggers_threshold(1)
     set_right_triggers_threshold(1, 1)
 	
-	if(get_val(XB1_SHARE)) set_val(XB1_A, 100)
-
 	// Rapid Look Arroud
-	if(get_val(XB1_LY) > L_STICK_TOLERANCE) {
-		set_val(XB1_LY, get_val(XB1_LY) + 50)
-	} else if(get_val(XB1_LY) < -L_STICK_TOLERANCE) {
-		set_val(XB1_LY, get_val(XB1_LY) - 50)
-	}
-	if(get_val(XB1_LX) > L_STICK_TOLERANCE) {
-		set_val(XB1_LX, get_val(XB1_LX) + 50)
-	} else if(get_val(XB1_LX) < -L_STICK_TOLERANCE) {
-		set_val(XB1_LX, get_val(XB1_LX) - 50)
-	}
+	rapid_look_around_full_l(10)
+	
+	if(get_val(XB1_SHARE)) set_val(XB1_A, 100)
 	
 	if(get_val(XB1_RY) > 10) {
 		set_val(XB1_RY, max(55, get_val(XB1_RY)))
@@ -305,6 +297,16 @@ main {
 	// 	// 	set_val(XB1_X, 100)
 	// 	// }
 	// }
+}
+
+function is_analog_outside_circle(x, y, radius) {
+	return (x * x + y * y) > radius * radius
+}
+
+function rapid_look_around_full_l(tolerance) {
+	if (is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), tolerance)) {
+		set_polar(POLAR_LS, 0 - get_polar(POLAR_LS, POLAR_ANGLE), MAX_RADIUS)
+	}
 }
 
 function finger_trigger_left_analog(tolerance) {
