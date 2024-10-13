@@ -107,7 +107,6 @@ main {
 		}
 	}
 
-
 	// Toggle Lights
 	if(isMultiPress(XB1_VIEW, XB1_B)) {
 		combo_run(r3)
