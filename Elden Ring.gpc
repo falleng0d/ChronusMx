@@ -63,16 +63,7 @@ main {
 	if(get_val(XB1_SHARE)) set_val(XB1_A, 100)
 
 	// Rapid Look Arroud
-	if(get_val(XB1_LY) > 25) {
-		set_val(XB1_LY, 100)
-	} else if(get_val(XB1_LY) < -25) {
-		set_val(XB1_LY, -100)
-	}
-	if(get_val(XB1_LX) > 25) {
-		set_val(XB1_LX, 100)
-	} else if(get_val(XB1_LX) < -25) {
-		set_val(XB1_LX, -100)
-	}
+	rapid_look_around_full_l(10)
 
 	// Auto Run
 	if (isAutoWalkingY) {
@@ -157,6 +148,16 @@ main {
 	// HOME HOTKEY + BUTTON
 	if (get_val(GET_HOME)) {
 		set_val(PRESS_HOME, 100)
+	}
+}
+
+function is_analog_outside_circle(x, y, radius) {
+	return (x * x + y * y) > radius * radius
+}
+
+function rapid_look_around_full_l(tolerance) {
+	if (is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), tolerance)) {
+		set_polar(POLAR_LS, 0 - get_polar(POLAR_LS, POLAR_ANGLE), MAX_RADIUS)
 	}
 }
 
