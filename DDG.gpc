@@ -10,6 +10,7 @@ define false = FALSE
 define L_STICK_TOLERANCE = 5
 define DEADZONE = 5
 define MAX_RADIUS = 32767
+define MAX_OBSERVED_RADIUS = 10000
 
 // REMAPS
 define BTN_START = XB1_A
@@ -26,20 +27,20 @@ define PRESS_LB = XB1_LB
 define GET_AUTO_AIM = XB1_LB
 define SET_AUTO_AIM = XB1_LB
 
+// CLASS
+define IS_MAGE = FALSE
+define SPEED_CAST_DEPLAY = 100
+
 // OTHERS
 int doDisableAim
 int taps, tapExpire, isAutoAimJustStarted, isContinueAutoAimAfterReleaseSnipeButton
 int isAutoAiming, isDoContinueAutoAim, snipeTime
 int isPrepareRapidPressA
-int isRapidPressA
 int pressL1Count, pressL1CountExpire
 
 int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX
 int doStart, doSelect, doHome
 int didStartAction
-
-int isHoldingY, isComboRelease
-int direction
 
 remap XB1_MENU -> XB1_PR1
 remap XB1_PR1 -> XB1_MENU
@@ -63,13 +64,8 @@ remap XB1_PR2 -> XB1_VIEW
 unmap XB1_SHARE
 
 init {
-	direction = -1
 	doDisableAim = TRUE
-	isDoContinueAutoAim = FALSE
-	snipeTime = 0
 	isContinueAutoAimAfterReleaseSnipeButton = TRUE
-	didStartAction = FALSE
-	isRapidPressA = FALSE
 }
 
 main {
@@ -86,19 +82,9 @@ main {
 	
 	// Rapid Look Arroud
 	rapid_look_around_full_l(10)
+	rapid_look_around_full_r(5, 65)
 	
 	if(get_val(XB1_SHARE)) set_val(XB1_A, 100)
-	
-	if(get_val(XB1_RY) > 10) {
-		set_val(XB1_RY, max(55, get_val(XB1_RY)))
-	} else if(get_val(XB1_RY) < -10) {
-		set_val(XB1_RY, min(-55, get_val(XB1_RY)))
-	}
-	if(get_val(XB1_RX) > 10) {
-		set_val(XB1_RX, max(55, get_val(XB1_RX)))
-	} else if(get_val(XB1_RX) < -10) {
-		set_val(XB1_RX, min(-55, get_val(XB1_RX)))
-	}
 	
 	// Defend (PRESS A) on open skill menu (LT)
 	// set_val(TRACE_3, is_any_axby_pressed()); // debug
@@ -121,15 +107,36 @@ main {
 	}
 
 	// Rapid press A if XB1_A is pressed for more than 300ms
-	if(event_press(XB1_A)) isPrepareRapidPressA = TRUE
-	if(event_release(XB1_A)) isPrepareRapidPressA = FALSE
-	
-	if(isPrepareRapidPressA && get_val(XB1_A) > 0 && get_ptime(XB1_A) > 300) {
-		isRapidPressA = TRUE
+	if(!IS_MAGE) {
+		if(event_press(XB1_A)) isPrepareRapidPressA = TRUE
+		if(event_release(XB1_A)) isPrepareRapidPressA = FALSE
+		
+		if(isPrepareRapidPressA && get_ival(XB1_A) > 0 && get_ptime(XB1_A) > 300) {
+			combo_run(a)
+		}
 	}
-	if(isRapidPressA) combo_run(a)
-	if(isRapidPressA && event_release(XB1_A)) isRapidPressA = FALSE
-
+	
+	if (IS_MAGE) {
+		if(get_ival(XB1_LT) > 0) {
+			// If holding Y, hold X after SPEED_CAST_DEPLAY ms
+			if(get_ival(XB1_Y) > 0 && get_ptime(XB1_Y) > SPEED_CAST_DEPLAY) {
+				set_val(XB1_X, 100)
+			}
+			// If holding A, hold X after SPEED_CAST_DEPLAY ms
+			if(get_ival(XB1_A) > 0 && get_ptime(XB1_A) > SPEED_CAST_DEPLAY) {
+				set_val(XB1_X, 100)
+			}
+			// If holding B, hold X after SPEED_CAST_DEPLAY ms
+			if(get_ival(XB1_B) > 0 && get_ptime(XB1_B) > SPEED_CAST_DEPLAY) {
+				set_val(XB1_X, 100)
+			}
+			// If holding RT, hold X after SPEED_CAST_DEPLAY ms
+			if(get_ival(XB1_RT) > 0 && get_ptime(XB1_RT) > SPEED_CAST_DEPLAY) {
+				set_val(XB1_X, 100)
+			}
+		}
+	}
+	
 	// Auto Aim
 	if(!isAutoAiming) {
 		if(event_release(GET_LB)) {
@@ -153,51 +160,7 @@ main {
 		if (!get_val(TRACE_1)) {
 			isAutoAimJustStarted = FALSE
 		}
-
-		// if(isAutoAimJustStarted == FALSE) {
-		// 	if(get_val(TRACE_1)) {
-		// 		if(get_ptime(TRACE_1) < 250) {
-		// 			isContinueAutoAimAfterReleaseSnipeButton = FALSE
-		// 		} else {
-		// 			isContinueAutoAimAfterReleaseSnipeButton = TRUE;
-		// 			set_val(XB1_RS, 100)
-		// 		}
-		//
-		// 		if(isContinueAutoAimAfterReleaseSnipeButton == FALSE) {
-		// 			//isAutoAiming = FALSE
-		// 		}
-		// 	}
-		// }
 	}
-
-	// if(toggleAutoAimOnDoublePress(200)) {
-	// 	//swap(TRACE_1, XB1_LB)
-	// 	//swap(GET_LB, TRACE_1)
-	// 	set_val(PRESS_LB, 100)
-	// 	if(get_ptime(GET_LB) < 250) { // L1 released for the first time after aim started
-	// 		isAutoAimJustStarted = FALSE
-	// 	}
-
-	// 	// Auto Snipe
-	// 	if(abs(get_val(XB1_LY)) < 20) { // if is not walking
-	// 		if(get_val(GET_LB)){ // Snipe Button Pressed
-	// 			// set_val(XB1_RS, 100)
-	// 			if(get_ptime(GET_LB) < 250 && isAutoAimJustStarted == FALSE) {
-	// 				isContinueAutoAimAfterReleaseSnipeButton = FALSE
-	// 				// combo_run(l3)
-	// 			} else {
-	// 				if (isAutoAimJustStarted == FALSE) {
-	// 					// combo_run(snipe)
-	// 					set_val(XB1_RS, 100)
-	// 				}
-	// 				isContinueAutoAimAfterReleaseSnipeButton = TRUE;
-	// 			}
-	// 		} else {
-	// 			// combo_stop(snipe)
-	// 			isDoContinueAutoAim = isContinueAutoAimAfterReleaseSnipeButton
-	// 		}
-	// 	}
-	// }
 
 	// Auto Run
 	if (isAutoWalkingY) {
@@ -220,41 +183,7 @@ main {
 			walkDirectionY = getDirection(XB1_LY)
 		}
 	}
-
-
-	// Toggle Lights
-	// if(isMultiPress(XB1_VIEW, XB1_B)) {
-	// 	combo_run(r3)
-	// 	doStart = FALSE
-	// 	doSelect = FALSE
-	// }
-
-	// START HOTKEY + BUTTON
-	//if (event_release(GET_START)) {
-	//	if (doStart) {
-	//		doStart = FALSE
-	//		// onStartMenu()
-	//		combo_run(r3)
-	//	} else {
-	//		combo_run(a)
-	//	}
-	//} else if (get_val(GET_START) == 100) {
-	//	if (get_ptime(GET_START) > 200) {
-	//		doStart = TRUE
-	//	} else {
-	//		// set_val(XB1_A, 100)
-	//	}
-	//}
-	// if (get_val(GET_START) == 100 && get_ptime(GET_START) > 200 && !didStartAction) {
-	// 	combo_run(r3)
-	// 	didStartAction = TRUE
-	// } else if (event_release(GET_START)) {
-	// 	if(didStartAction) {
-	// 		didStartAction = FALSE
-	// 	} else {
-	// 		combo_run(a)
-	// 	}
-	// }
+	
 	if (get_val(GET_START) == 100) {
 		set_val(XB1_A, 100)
 	}
@@ -281,22 +210,6 @@ main {
 	if (get_val(GET_HOME)) {
 		set_val(PRESS_HOME, 100)
 	}
-
-	// if (event_release(GET_HOME)) {
-	// 	if (doHome) {
-	// 		doHome = FALSE
-	// 		onHomeMenu()
-	// 		combo_run(OpenHomeMenu)
-	// 	} else {
-	// 		set_val(XB1_X, 100)
-	// 	}
-	// } else if (get_val(GET_HOME) == 100) {
-	// 	// if (get_ptime(GET_HOME) > 400) {
-	// 	// 	doHome = TRUE
-	// 	// } else {
-	// 	// 	set_val(XB1_X, 100)
-	// 	// }
-	// }
 }
 
 function is_analog_outside_circle(x, y, radius) {
@@ -306,6 +219,29 @@ function is_analog_outside_circle(x, y, radius) {
 function rapid_look_around_full_l(tolerance) {
 	if (is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), tolerance)) {
 		set_polar(POLAR_LS, 0 - get_polar(POLAR_LS, POLAR_ANGLE), MAX_RADIUS)
+	}
+}
+
+// convert from 0-100 axis to 0-maxObservedRadius polar
+function to_polar_radius(val) {
+	return (val * MAX_RADIUS) / 100
+}
+
+// convert from 0-MAX_OBSERVED_RADIUS axis to 0-MAX_RADIUS polar
+function to_max_radius(val) {
+	return (val * MAX_RADIUS) / MAX_OBSERVED_RADIUS
+}
+
+function rapid_look_around_full_r(deadzone, min_val) {
+	if (is_analog_outside_circle(get_val(XB1_RX), get_val(XB1_RY), deadzone)) {
+		set_val(TRACE_3, get_polar(POLAR_RS, POLAR_RADIUS))
+		set_val(TRACE_4, to_polar_radius(min_val))
+		set_val(TRACE_5, to_max_radius(get_polar(POLAR_RS, POLAR_RADIUS)))
+		set_polar(
+			POLAR_RS,
+			0 - get_polar(POLAR_RS, POLAR_ANGLE),
+			max(to_max_radius(get_polar(POLAR_RS, POLAR_RADIUS)), to_polar_radius(min_val))
+		)
 	}
 }
 
@@ -475,13 +411,6 @@ combo l3 {
     set_val(XB1_LS, 0)
 }
 
-
-combo r3 {
-    set_val(XB1_RS, 100)
-    wait(50)
-    set_val(XB1_RS, 0)
-}
-
 combo a {
     wait(50)
     set_val(XB1_A, 0)
@@ -517,3 +446,5 @@ combo OpenHomeMenu {
     wait(200);
     set_val(PRESS_HOME, 0)
 }
+
+ ˙æèπàΩàæéΩéªåºåÕ
