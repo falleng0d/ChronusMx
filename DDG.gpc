@@ -35,7 +35,7 @@ define SPEED_CAST_DEPLAY = 100
 int taps, tapExpire, isAutoAimJustStarted, isContinueAutoAimAfterReleaseSnipeButton
 int isAutoAiming, isDoContinueAutoAim
 int isPrepareRapidPressA
-int pressL1Count
+int pressLTCount
 
 int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX
 int doStart, doSelect, doHome
@@ -92,16 +92,16 @@ main {
 
 	// Press XB1_X if XB1_LT is pressed twice in quick succession
 	if(event_press(XB1_LT)) {
-		if(pressL1Count == 0) {
-			pressL1Count = pressL1Count + 1
+		if(pressLTCount == 0) {
+			pressLTCount = pressLTCount + 1
 		} else if (get_ptime(XB1_LT) < 200) {
-			pressL1Count = 0
+			pressLTCount = 0
 			combo_run(x)
 		}
 	}
 
 	if(get_val(XB1_LT) == 0 && get_ptime(XB1_LT) > 300) {
-		pressL1Count = 0
+		pressLTCount = 0
 	}
 
 	// Rapid press A if XB1_A is pressed for more than 300ms
