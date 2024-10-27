@@ -32,11 +32,10 @@ define IS_MAGE = FALSE
 define SPEED_CAST_DEPLAY = 100
 
 // OTHERS
-int doDisableAim
 int taps, tapExpire, isAutoAimJustStarted, isContinueAutoAimAfterReleaseSnipeButton
-int isAutoAiming, isDoContinueAutoAim, snipeTime
+int isAutoAiming, isDoContinueAutoAim
 int isPrepareRapidPressA
-int pressL1Count, pressL1CountExpire
+int pressL1Count
 
 int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX
 int doStart, doSelect, doHome
@@ -64,7 +63,6 @@ remap XB1_PR2 -> XB1_VIEW
 unmap XB1_SHARE
 
 init {
-	doDisableAim = TRUE
 	isContinueAutoAimAfterReleaseSnipeButton = TRUE
 }
 
@@ -447,4 +445,4 @@ combo OpenHomeMenu {
     set_val(PRESS_HOME, 0)
 }
 
- ú¾¹ˆ½ˆ¾½»Œ¼ŒÍ
+ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
