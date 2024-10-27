@@ -30,12 +30,16 @@ define SET_AUTO_AIM = XB1_LB
 // CLASS
 define IS_MAGE = FALSE
 define SPEED_CAST_DEPLAY = 100
+define IS_MAGIC_ARCHER = TRUE
+define IS_WARRIOR = FALSE
 
 // OTHERS
 int taps, tapExpire, isAutoAimJustStarted, isContinueAutoAimAfterReleaseSnipeButton
 int isAutoAiming, isDoContinueAutoAim
 int isPrepareRapidPressA
 int pressLTCount
+int pressRTCount, isGreatswordCombo
+int isDrawBow, isBowAutoFire, equippedArrow, firingArrow, skipRT
 
 int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX
 int doStart, doSelect, doHome
@@ -82,30 +86,54 @@ main {
 	rapid_look_around_full_l(10)
 	rapid_look_around_full_r(5, 65)
 	
-	if(get_val(XB1_SHARE)) set_val(XB1_A, 100)
+	if(get_val(XB1_SHARE) && !IS_MAGIC_ARCHER) set_val(XB1_A, 100)
+	if(get_val(XB1_SHARE) && IS_MAGIC_ARCHER) set_val(XB1_RS, 100)
 	
 	// Defend (PRESS A) on open skill menu (LT)
 	// set_val(TRACE_3, is_any_axby_pressed()); // debug
 	// if(get_val(XB1_LT) > 0 && !is_any_axby_pressed()) {
 	// 	set_val(XB1_X, 100)
 	// }
-
-	// Press XB1_X if XB1_LT is pressed twice in quick succession
-	if(event_press(XB1_LT)) {
-		if(pressLTCount == 0) {
-			pressLTCount = pressLTCount + 1
-		} else if (get_ptime(XB1_LT) < 200) {
-			pressLTCount = 0
-			combo_run(x)
+	
+	if (IS_WARRIOR) {
+		// Press XB1_X if XB1_LT is pressed twice in quick succession
+		if(event_press(XB1_LT)) {
+			if(pressLTCount == 0) {
+				pressLTCount = pressLTCount + 1
+			} else if (get_ptime(XB1_LT) < 200) {
+				pressLTCount = 0
+				combo_run(x)
+			}
 		}
-	}
-
-	if(get_val(XB1_LT) == 0 && get_ptime(XB1_LT) > 300) {
-		pressLTCount = 0
-	}
-
-	// Rapid press A if XB1_A is pressed for more than 300ms
-	if(!IS_MAGE) {
+		
+		if(get_val(XB1_LT) == 0 && get_ptime(XB1_LT) > 300) {
+			pressLTCount = 0
+		}
+		
+		// Rapid fire on XB1_RT if pressed twice in quick succession
+		if(isGreatswordCombo) {
+			if (event_press(XB1_RT)) {
+				isGreatswordCombo = FALSE
+				combo_stop(greatswordSwing)
+			} else {
+				combo_run(greatswordSwing)
+			}
+		} else {
+			if (event_press(XB1_RT)) {
+				if (pressRTCount == 0) {
+					pressRTCount = pressRTCount + 1
+				} else if (get_ptime(XB1_RT) < 200) {
+					pressRTCount = 0
+					isGreatswordCombo = TRUE
+				}
+			}
+			
+			if(get_val(XB1_RT) == 0 && get_ptime(XB1_RT) > 300) {
+				pressRTCount = 0
+			}
+		}
+		
+		// Rapid press A if XB1_A is pressed for more than 300ms
 		if(event_press(XB1_A)) isPrepareRapidPressA = TRUE
 		if(event_release(XB1_A)) isPrepareRapidPressA = FALSE
 		
@@ -132,6 +160,42 @@ main {
 			if(get_ival(XB1_RT) > 0 && get_ptime(XB1_RT) > SPEED_CAST_DEPLAY) {
 				set_val(XB1_X, 100)
 			}
+		}
+	}
+	
+	if (IS_MAGIC_ARCHER) {
+		// Auto Fire Bow on double press LT
+		if (!isBowAutoFire) {
+			if (event_press(XB1_LT)) {
+				if (pressLTCount == 0) {
+					pressLTCount = pressLTCount + 1
+				} else if (get_ptime(XB1_LT) < 200) {
+					pressLTCount = 0
+					isBowAutoFire = TRUE
+					stopAutoDrawBow()
+				}
+			}
+			
+			if (get_val(XB1_LT) == 0 && get_ptime(XB1_LT) > 300) {
+				pressLTCount = 0
+			}
+			
+			if(!isBowAutoFire) doAutoDrawBow()
+		} else {
+			combo_run(autoFireBow)
+			
+			if (event_press(XB1_LT)) {
+				isBowAutoFire = FALSE
+				combo_stop(autoFireBow)
+			}
+		}
+	}
+	
+	if (skipRT) {
+		if (event_release(XB1_RT)) {
+			skipRT = FALSE
+		} else {
+			set_val(XB1_RT, 0)
 		}
 	}
 	
@@ -207,7 +271,45 @@ main {
 	// HOME HOTKEY + BUTTON
 	if (get_val(GET_HOME)) {
 		set_val(PRESS_HOME, 100)
+		onHomeMenu()
 	}
+}
+
+function doAutoDrawBow() {
+	// Hold X upon pressing LT and releasing upon pressing any of (A, B, X, Y, LT, RT)
+	if (isDrawBow && event_press(XB1_LT)) {
+		stopAutoDrawBow()
+		return
+	}
+	
+	if (isDrawBow) {
+		set_val(XB1_X, 100)
+		
+		set_val(TRACE_3, equippedArrow)
+		set_val(TRACE_4, getEquippedArrow())
+		if (!equippedArrow || (getEquippedArrow() != equippedArrow && getEquippedArrow() != XB1_RT)) {
+			equippedArrow = getEquippedArrow()
+			return
+		}
+		
+		if (equippedArrow && event_press(XB1_RT)) {
+			firingArrow = equippedArrow
+			
+			if (equippedArrow != XB1_RT) {
+				skipRT = TRUE
+			}
+			
+			combo_run(fireArrow)
+		}
+	} else if (event_press(XB1_LT)) isDrawBow = TRUE
+}
+
+function stopAutoDrawBow() {
+	equippedArrow = 0
+	isDrawBow = FALSE
+	skipRT = FALSE
+	combo_stop(releaseBow)
+	combo_stop(autoFireBow)
 }
 
 function is_analog_outside_circle(x, y, radius) {
@@ -232,9 +334,6 @@ function to_max_radius(val) {
 
 function rapid_look_around_full_r(deadzone, min_val) {
 	if (is_analog_outside_circle(get_val(XB1_RX), get_val(XB1_RY), deadzone)) {
-		set_val(TRACE_3, get_polar(POLAR_RS, POLAR_RADIUS))
-		set_val(TRACE_4, to_polar_radius(min_val))
-		set_val(TRACE_5, to_max_radius(get_polar(POLAR_RS, POLAR_RADIUS)))
 		set_polar(
 			POLAR_RS,
 			0 - get_polar(POLAR_RS, POLAR_ANGLE),
@@ -336,6 +435,9 @@ function onSelectMenu() {
 function onHomeMenu() {
 	isAutoWalkingY = FALSE
 	isAutoWalkingX = FALSE
+	isAutoAiming = FALSE
+	isGreatswordCombo = FALSE
+	stopAutoDrawBow()
 }
 
 function toggleAutoAimOnDoublePress(doublePressSpeed) {
@@ -403,6 +505,22 @@ function useDeadzone(bt, deadzone) {
 	return 0
 }
 
+function getEquippedArrow() {
+	if (event_press(XB1_A)) {
+		return XB1_A
+	} else if (event_press(XB1_B)) {
+		return XB1_B
+	} else if (event_press(XB1_X)) {
+		return XB1_X
+	} else if (event_press(XB1_Y)) {
+		return XB1_Y
+	} else if (event_press(XB1_RT)) {
+		return XB1_RT
+	}
+	
+	return equippedArrow
+}
+
 combo l3 {
     set_val(XB1_LS, 100)
     wait(200)
@@ -416,6 +534,37 @@ combo a {
     set_val(XB1_A, 100)
 }
 
+combo greatswordSwing {
+	set_val(XB1_RT, 100)
+	wait(50)
+	set_val(XB1_RT, 0)
+	wait(1000)
+}
+
+combo releaseBow {
+	set_val(XB1_X, 100)
+	wait(3000)
+}
+
+combo autoFireBow {
+	set_val(XB1_X, 100)
+	wait(1400)
+	set_val(XB1_X, 0)
+	wait(100)
+}
+
+combo fireArrow {
+	set_val(firingArrow, 100)
+	wait(50)
+	set_val(firingArrow, 0)
+	wait(50)
+	set_val(firingArrow, 100)
+	wait(50)
+	set_val(firingArrow, 0)
+	wait(100)
+	set_val(firingArrow, 100)
+	wait(50)
+}
 
 combo x {
     set_val(XB1_X, 100)
@@ -444,5 +593,4 @@ combo OpenHomeMenu {
     wait(200);
     set_val(PRESS_HOME, 0)
 }
-
- ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ
+ ˙æèπàΩàæéΩéªåºåÕ
