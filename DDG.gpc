@@ -581,7 +581,7 @@ function clearOled() {
 
 function doAutoDrawBow() {
 	// Hold X upon pressing LT and releasing upon pressing any of (A, B, X, Y, LT, RT)
-	if (isDrawBow && event_press(XB1_LT)) {
+	if (isDrawBow && (event_press(XB1_LT) || event_press(XB1_LB))) {
 		stopAutoDrawBow()
 		return
 	}
