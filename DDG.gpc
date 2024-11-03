@@ -16,7 +16,6 @@ define Right = -3
 define String = 0
 define Value = 1
 define Oled = 2
-int n, i
 // endregion
 
 // UTILITIES
@@ -68,9 +67,8 @@ int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX
 int doStart, doSelect, doHome
 int didStartAction
 
-int Update
-int OledClear
-int stringLength
+// OLED
+int Update, OledClear, stringLength, n, i
 
 remap XB1_MENU -> XB1_PR1
 remap XB1_PR1 -> XB1_MENU
