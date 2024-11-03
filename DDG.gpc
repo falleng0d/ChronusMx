@@ -51,7 +51,7 @@ define SET_AUTO_AIM = XB1_LB
 define SPEED_CAST_DEPLAY = 100
 define NEXT_CLASS = 1
 define PREV_CLASS = -1
-int classChanged
+int classChanged, changedWithStick
 int selectedClass // 0: No Class, 1: Warrior, 2: Mage, 3: Magic Archer
 const string Classes[] = {"No Class", "Warrior", "Mage", "Magic Archer"}
 
@@ -300,16 +300,21 @@ main {
 	} else if (get_val(GET_HOME) == 100) {
 		// Right analog right or left to change class
 		if (!classChanged) {
-			if (get_ival(XB1_RX) < (DEADZONE * DIR_LEFT)) {
-				changeClass(NEXT_CLASS)
-				classChanged = TRUE
-				doHome = FALSE
-			} else if (get_ival(XB1_RX) > (DEADZONE * DIR_RIGHT)) {
+			if (isRightStickLeft() || isLeftStickLeft()) {
 				changeClass(PREV_CLASS)
 				classChanged = TRUE
 				doHome = FALSE
+			} else if (isRightStickRight() || isLeftStickRight()) {
+				changeClass(NEXT_CLASS)
+				classChanged = TRUE
+				doHome = FALSE
 			}
-		} else if (abs(get_ival(XB1_RX)) < DEADZONE) {
+			
+			if (classChanged) {
+				if(isRightStickLeft() || isRightStickRight()) changedWithStick = XB1_RX
+				else changedWithStick = XB1_LX
+			}
+		} else if (abs(get_ival(changedWithStick)) < DEADZONE) {
 			classChanged = FALSE
 		}
 	}
@@ -427,12 +432,20 @@ function isLeftAxisBackward(min_intensity) {
 	return get_val(XB1_LY) >= min_intensity
 }
 
-function isLeftAxisLeft(min_intensity) {
-	return get_val(XB1_LX) < -min_intensity
+function isRightStickLeft() {
+	return get_ival(XB1_RX) < (DEADZONE * DIR_LEFT)
 }
 
-function isLeftAxisRight(min_intensity) {
-	return get_val(XB1_LX) >= min_intensity
+function isRightStickRight() {
+	return get_ival(XB1_RX) > (DEADZONE * DIR_RIGHT)
+}
+
+function isLeftStickLeft() {
+	return get_ival(XB1_LX) < (DEADZONE * DIR_LEFT)
+}
+
+function isLeftStickRight() {
+	return get_ival(XB1_LX) > (DEADZONE * DIR_RIGHT)
 }
 
 function toggleAutoAimOnDoublePress(doublePressSpeed) {
