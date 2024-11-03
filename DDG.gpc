@@ -37,7 +37,7 @@ define MAX_OBSERVED_RADIUS = 10000
 define BTN_START = XB1_A
 define PRESS_SELECT = XB1_PR2
 define PRESS_START = XB1_PR1
-define PRESS_HOME = XB1_PL1
+define PRESS_HOME = XB1_PR1
 define GET_SELECT = XB1_VIEW
 define GET_START = XB1_MENU
 define GET_HOME = XB1_XBOX
@@ -77,7 +77,7 @@ remap XB1_PR1 -> XB1_MENU
 
 // PRESS HOME
 unmap XB1_XBOX
-remap XB1_XBOX -> XB1_MENU
+// remap XB1_XBOX -> XB1_MENU
 // remap XB1_PL1 -> XB1_MENU
 
 // PRESS SELECT
@@ -292,36 +292,24 @@ main {
 	}
 
 	// HOME HOTKEY + BUTTON
-	// if (get_val(GET_HOME)) {
-	// 	if (event_press(XB1_RIGHT)) {
-	// 		changeClass(NEXT_CLASS)
-	// 	} else if (event_press(XB1_LEFT)) {
-	// 		changeClass(PREV_CLASS)
-	// 	}
-	// 	set_val(PRESS_HOME, 100)
-	// 	onHomeMenu()
-	// } else if (event_release(GET_HOME)) {
-	// 	if (doHome) {
-	// 		doHome = FALSE
-	// 		onHomeMenu()
-	// 		combo_run(OpenHomeMenu)
-	// 	}
-	// }
 	if (event_release(GET_HOME)) {
         if (doHome) {
-			doHome = FALSE
 			onHomeMenu()
 			combo_run(OpenHomeMenu)
-		}
+		} else {
+			doHome = TRUE
+        }
 	} else if (get_val(GET_HOME) == 100) {
 		// Right analog right or left to change class
 		if (!classChanged) {
 			if (get_ival(XB1_RX) < (DEADZONE * DIR_LEFT)) {
 				changeClass(NEXT_CLASS)
 				classChanged = TRUE
+				doHome = FALSE
 			} else if (get_ival(XB1_RX) > (DEADZONE * DIR_RIGHT)) {
 				changeClass(PREV_CLASS)
 				classChanged = TRUE
+				doHome = FALSE
 			}
 		} else if (abs(get_ival(XB1_RX)) < DEADZONE) {
 			classChanged = FALSE
