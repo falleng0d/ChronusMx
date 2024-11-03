@@ -1,3 +1,24 @@
+// region OLED DEFINITIONS
+define White = OLED_WHITE
+define Black = OLED_BLACK
+define Small = OLED_FONT_SMALL
+define Medium = OLED_FONT_MEDIUM
+define Large = OLED_FONT_LARGE
+define Small_Width = OLED_FONT_SMALL_WIDTH
+define Medium_Width = OLED_FONT_MEDIUM_WIDTH
+define Large_Width = OLED_FONT_LARGE_WIDTH
+define Small_Height = OLED_FONT_SMALL_HEIGHT
+define Medium_Height = OLED_FONT_MEDIUM_HEIGHT
+define Large_Height = OLED_FONT_LARGE_HEIGHT
+define Left = -1
+define Center = -2
+define Right = -3
+define String = 0
+define Value = 1
+define Oled = 2
+int n, i
+// endregion
+
 // UTILITIES
 define FORWARD = -40
 define BACKWARD = 40
@@ -29,7 +50,11 @@ define SET_AUTO_AIM = XB1_LB
 
 // CLASS
 define SPEED_CAST_DEPLAY = 100
-int CLASS = 0
+define NEXT_CLASS = 1
+define PREV_CLASS = -1
+int selectedClass // 0: No Class, 1: Warrior, 2: Mage, 3: Magic Archer
+int classChanged
+const string Classes[] = {"No Class", "Warrior", "Mage", "Magic Archer"}
 
 // OTHERS
 int taps, tapExpire, isAutoAimJustStarted, isContinueAutoAimAfterReleaseSnipeButton
@@ -42,6 +67,10 @@ int isDrawBow, isBowAutoFire, equippedArrow, firingArrow, skipRT
 int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX
 int doStart, doSelect, doHome
 int didStartAction
+
+int Update
+int OledClear
+int stringLength
 
 remap XB1_MENU -> XB1_PR1
 remap XB1_PR1 -> XB1_MENU
@@ -60,6 +89,11 @@ unmap XB1_SHARE
 
 init {
 	isContinueAutoAimAfterReleaseSnipeButton = TRUE
+	
+	adt_off(XB1_LT)
+	adt_off(XB1_RT)
+	reset_leds()
+    updateOled()
 }
 
 main {
@@ -67,12 +101,9 @@ main {
 	set_val(XB1_RY, useDeadzone(XB1_RY, DEADZONE))
 	set_val(XB1_LX, useDeadzone(XB1_LX, DEADZONE))
 	set_val(XB1_LY, useDeadzone(XB1_LY, DEADZONE))
-	
-    adt_off(XB1_LT)
-    adt_off(XB1_RT)
 
 	set_left_triggers_threshold(1)
-    set_right_triggers_threshold(1, 1)
+	set_right_triggers_threshold(1, 1)
 	
 	// Rapid Look Arroud
 	rapid_look_around_full_l(10)
@@ -253,18 +284,62 @@ main {
 		}
 	} else if (get_val(GET_SELECT) == 100 && isAutoWalkingY == FALSE && isAutoWalkingX == FALSE) {
 		if (get_ptime(GET_SELECT) > 400) {
-		 	// doSelect = TRUE
-		 	set_val(XB1_A, 100)
+			// doSelect = TRUE
+			set_val(XB1_A, 100)
 		} else {
 			set_val(XB1_A, 100)
 		}
 	}
 
 	// HOME HOTKEY + BUTTON
-	if (get_val(GET_HOME)) {
-		set_val(PRESS_HOME, 100)
-		onHomeMenu()
+	// if (get_val(GET_HOME)) {
+	// 	if (event_press(XB1_RIGHT)) {
+	// 		changeClass(NEXT_CLASS)
+	// 	} else if (event_press(XB1_LEFT)) {
+	// 		changeClass(PREV_CLASS)
+	// 	}
+	// 	set_val(PRESS_HOME, 100)
+	// 	onHomeMenu()
+	// } else if (event_release(GET_HOME)) {
+	// 	if (doHome) {
+	// 		doHome = FALSE
+	// 		onHomeMenu()
+	// 		combo_run(OpenHomeMenu)
+	// 	}
+	// }
+	if (event_release(GET_HOME)) {
+        if (doHome) {
+			doHome = FALSE
+			onHomeMenu()
+			combo_run(OpenHomeMenu)
+		}
+	} else if (get_val(GET_HOME) == 100) {
+		// Right analog right or left to change class
+		if (!classChanged) {
+			if (get_ival(XB1_RX) < (DEADZONE * DIR_LEFT)) {
+				changeClass(NEXT_CLASS)
+				classChanged = TRUE
+			} else if (get_ival(XB1_RX) > (DEADZONE * DIR_RIGHT)) {
+				changeClass(PREV_CLASS)
+				classChanged = TRUE
+			}
+		} else if (abs(get_ival(XB1_RX)) < DEADZONE) {
+			classChanged = FALSE
+		}
 	}
+	
+	// OLED
+	OledClear = max(0, OledClear - get_rtime())
+    if (OledClear) {
+        if (OledClear <= get_rtime()) {
+            cls_oled(0)
+        }
+    }
+	
+	if (Update) {
+        paint(Classes[selectedClass], Center, 27, Small, White, String)
+		Update = FALSE
+    }
 }
 
 // region SHARED UTILITIES
@@ -300,16 +375,16 @@ function rapid_look_around_full_r(deadzone, min_val) {
 }
 
 function finger_trigger_left_analog(tolerance) {
-    if(get_val(XB1_LY) > tolerance) {
-        set_val(XB1_LY, 100)
-    } else if(get_val(XB1_LY) < -tolerance) {
-        set_val(XB1_LY, -100)
-    }
-    if(get_val(XB1_LX) > tolerance) {
-        set_val(XB1_LX, 100)
-    } else if(get_val(XB1_LX) < -tolerance) {
-        set_val(XB1_LX, -100)
-    }
+	if(get_val(XB1_LY) > tolerance) {
+		set_val(XB1_LY, 100)
+	} else if(get_val(XB1_LY) < -tolerance) {
+		set_val(XB1_LY, -100)
+	}
+	if(get_val(XB1_LX) > tolerance) {
+		set_val(XB1_LX, 100)
+	} else if(get_val(XB1_LX) < -tolerance) {
+		set_val(XB1_LX, -100)
+	}
 }
 
 function is_any_axby_pressed() {
@@ -334,15 +409,15 @@ function finger_trigger_right_analog(tolerance) {
 }
 
 function set_left_triggers_threshold(threshold) {
-    if(get_val(XB1_LB) < threshold) set_val(XB1_LB, 0) else set_val(XB1_LB, 100)
+	if(get_val(XB1_LB) < threshold) set_val(XB1_LB, 0) else set_val(XB1_LB, 100)
 	if(get_val(XB1_LT) < threshold) set_val(XB1_LT, 0) else set_val(XB1_LT, 100)
 }
 
 function set_right_triggers_threshold(threshold, threshold_small) {
-    // if XB1_LT is pressed(aiming), the threshold is smaller
-    if(get_val(XB1_LT) > threshold) {
-        threshold = threshold_small
-    }
+	// if XB1_LT is pressed(aiming), the threshold is smaller
+	if(get_val(XB1_LT) > threshold) {
+		threshold = threshold_small
+	}
 
 	if(get_val(XB1_RB) < threshold) set_val(XB1_RB, 0) else set_val(XB1_RB, 100)
 	if(get_val(XB1_RT) < threshold) set_val(XB1_RT, 0) else set_val(XB1_RT, 100)
@@ -441,6 +516,60 @@ function useDeadzone(bt, deadzone) {
 
 // endregion
 
+// region OLED UTILITIES
+
+function paint(f_string, f_x, f_y, f_font, f_color, f_type) {
+    if (f_type == String) {
+        print(xLocation(getStringLength(f_string), f_font, f_x), f_y, f_font, f_color, f_string)
+    } else if (f_type == Value) {
+        if (f_string < 0) { putc_oled(1, 45) }
+        if (f_string) {
+            for (n = find_digits(f_string) + i = (f_string < 0), f_string = abs(f_string); f_string > 0; n--, i++) {
+                putc_oled(n, f_string % 10 + 48)
+                f_string = f_string / 10
+            }
+        } else {
+            putc_oled(1, 48)
+            i = 1
+        }
+        puts_oled(xLocation(i, f_font, f_x), f_y, f_font, i, f_color)
+    } else if (f_type == Oled) {
+        putc_oled(1, f_string)
+        puts_oled(f_x, f_y, f_font, 1, f_color)
+    }
+}
+
+function getStringLength(offset) {
+    stringLength = 0
+    while (duint8(offset++)) { stringLength++ }
+    return stringLength + 1
+}
+
+function xLocation(f_chars, f_font, f_x) {
+    if (f_x == -3) { return 128 - ((f_chars * (7 + (f_font > 1) + f_font * 4)) + 3) }
+    if (f_x == -2) { return 64 - ((f_chars * (7 + (f_font > 1) + f_font * 4)) / 2) }
+    if (f_x == -1) { return 3 }
+    return f_x
+}
+
+function find_digits(f_num) {
+    for (n = 1; n < 11; n++) {
+        if (!(abs(f_num) / pow(10, n))) {
+            return n
+            break
+        }
+    }
+    return 1
+}
+
+function updateOled() {
+    cls_oled(0)
+    Update = TRUE
+    OledClear = 10000
+}
+
+// endregion
+
 // region SCRIPT SPECIFIC
 
 function doAutoDrawBow() {
@@ -503,7 +632,6 @@ function onHomeMenu() {
 	stopAutoDrawBow()
 }
 
-
 function getEquippedArrow() {
 	if (event_press(XB1_A)) {
 		return XB1_A
@@ -521,15 +649,20 @@ function getEquippedArrow() {
 }
 
 function IS_WARRIOR() {
-	return CLASS == 1
+	return selectedClass == 1
 }
 
 function IS_MAGE() {
-	return CLASS == 2
+	return selectedClass == 2
 }
 
 function IS_MAGIC_ARCHER() {
-	return CLASS == 3
+	return selectedClass == 3
+}
+
+function changeClass(direction) {
+	selectedClass = (selectedClass + direction + 4) % 4
+	updateOled()
 }
 
 // endregion
@@ -537,16 +670,16 @@ function IS_MAGIC_ARCHER() {
 // region COMBOS
 
 combo l3 {
-    set_val(XB1_LS, 100)
-    wait(200)
-    set_val(XB1_LS, 0)
+	set_val(XB1_LS, 100)
+	wait(200)
+	set_val(XB1_LS, 0)
 }
 
 combo a {
-    wait(50)
-    set_val(XB1_A, 0)
-    wait(50)
-    set_val(XB1_A, 100)
+	wait(50)
+	set_val(XB1_A, 0)
+	wait(50)
+	set_val(XB1_A, 100)
 }
 
 combo greatswordSwing {
@@ -582,31 +715,31 @@ combo fireArrow {
 }
 
 combo x {
-    set_val(XB1_X, 100)
-    wait(100)
+	set_val(XB1_X, 100)
+	wait(100)
 }
 
 combo snipe {
-    set_val(XB1_RS, 100)
-    wait(50)
+	set_val(XB1_RS, 100)
+	wait(50)
 }
 
 combo OpenStartMenu {
-    set_val(PRESS_START, 100)
-    wait(200)
-    set_val(PRESS_START, 0)
+	set_val(PRESS_START, 100)
+	wait(200)
+	set_val(PRESS_START, 0)
 }
 
 combo OpenSelectMenu {
-    set_val(PRESS_SELECT, 100)
-    wait(200)
-    set_val(PRESS_SELECT, 0)
+	set_val(PRESS_SELECT, 100)
+	wait(200)
+	set_val(PRESS_SELECT, 0)
 }
 
 combo OpenHomeMenu {
-    set_val(PRESS_HOME, 100)
-    wait(200)
-    set_val(PRESS_HOME, 0)
+	set_val(PRESS_HOME, 100)
+	wait(200)
+	set_val(PRESS_HOME, 0)
 }
 
 // endregion
