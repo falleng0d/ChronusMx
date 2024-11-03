@@ -29,6 +29,7 @@ define true = TRUE
 define false = FALSE
 define L_STICK_TOLERANCE = 5
 define DEADZONE = 5
+define MENU_DEADZONE = 20
 define MAX_RADIUS = 32767
 define MAX_OBSERVED_RADIUS = 10000
 
@@ -49,11 +50,13 @@ define SET_AUTO_AIM = XB1_LB
 
 // CLASS
 define SPEED_CAST_DEPLAY = 100
-define NEXT_CLASS = 1
-define PREV_CLASS = -1
-int classChanged, changedWithStick
+define NEXT = 1
+define PREV = -1
+int classChanged, changedWithStick, modeChanged, modeChangedWithStick
 int selectedClass // 0: No Class, 1: Warrior, 2: Mage, 3: Magic Archer
-const string Classes[] = {"No Class", "Warrior", "Mage", "Magic Archer"}
+int selectedMode // 0: Toggle, 1: No Toggle
+const string Classes[] = {"No Class", "Warrior", "Mage", "Magic Archer", "Magic Archer"}
+const string MagicArcherModes[] = {"Toggle", "No Toggle"}
 
 // OTHERS
 int taps, tapExpire, isAutoAimJustStarted, isContinueAutoAimAfterReleaseSnipeButton
@@ -105,7 +108,8 @@ main {
 	
 	// Rapid Look Arroud
 	rapid_look_around_full_l(10)
-	rapid_look_around_full_r(5, 65)
+	if (IS_MAGIC_ARCHER() && (isBowAutoFire || isDrawBow)) rapid_look_around_full_r(5, 65)
+	else rapid_look_around_full_r(5, 70)
 	
 	if(get_val(XB1_SHARE) && !IS_MAGIC_ARCHER()) set_val(XB1_A, 100)
 	if(get_val(XB1_SHARE) && IS_MAGIC_ARCHER()) set_val(XB1_RS, 100)
@@ -201,7 +205,11 @@ main {
 				pressLTCount = 0
 			}
 			
-			if(!isBowAutoFire) doAutoDrawBow()
+			if (isToggleDrawBowMode()) {
+				if(!isBowAutoFire) doAutoDrawBow()
+			} else {
+				if(!isBowAutoFire) doDrawBow()
+			}
 		} else {
 			combo_run(autoFireBow)
 			
@@ -298,30 +306,14 @@ main {
 			doHome = TRUE
         }
 	} else if (get_val(GET_HOME) == 100) {
-		// Right analog right or left to change class
-		if (!classChanged) {
-			if (isRightStickLeft() || isLeftStickLeft()) {
-				changeClass(PREV_CLASS)
-				classChanged = TRUE
-				doHome = FALSE
-			} else if (isRightStickRight() || isLeftStickRight()) {
-				changeClass(NEXT_CLASS)
-				classChanged = TRUE
-				doHome = FALSE
-			}
-			
-			if (classChanged) {
-				if(isRightStickLeft() || isRightStickRight()) changedWithStick = XB1_RX
-				else changedWithStick = XB1_LX
-			}
-		} else if (abs(get_ival(changedWithStick)) < DEADZONE) {
-			classChanged = FALSE
-		}
+		checkChangeClass()
+		checkChangeMode()
 	}
 	
 	// OLED
-	clearOled()
+	// clearOled()
 	updateOled()
+	set_val(TRACE_2, selectedMode)
 }
 
 // region SHARED UTILITIES
@@ -424,19 +416,35 @@ function isLeftAxisBackward(min_intensity) {
 }
 
 function isRightStickLeft() {
-	return get_ival(XB1_RX) < (DEADZONE * DIR_LEFT)
+	return get_ival(XB1_RX) < (MENU_DEADZONE * DIR_LEFT)
 }
 
 function isRightStickRight() {
-	return get_ival(XB1_RX) > (DEADZONE * DIR_RIGHT)
+	return get_ival(XB1_RX) > (MENU_DEADZONE * DIR_RIGHT)
+}
+
+function isRightStickUp() {
+	return get_ival(XB1_RY) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isRightStickDown() {
+	return get_ival(XB1_RY) >= (MENU_DEADZONE * DIR_RIGHT)
 }
 
 function isLeftStickLeft() {
-	return get_ival(XB1_LX) < (DEADZONE * DIR_LEFT)
+	return get_ival(XB1_LX) < (MENU_DEADZONE * DIR_LEFT)
 }
 
 function isLeftStickRight() {
-	return get_ival(XB1_LX) > (DEADZONE * DIR_RIGHT)
+	return get_ival(XB1_LX) > (MENU_DEADZONE * DIR_RIGHT)
+}
+
+function isLeftStickUp() {
+	return get_ival(XB1_LY) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isLeftStickDown() {
+	return get_ival(XB1_LY) >= (MENU_DEADZONE * DIR_RIGHT)
 }
 
 function toggleAutoAimOnDoublePress(doublePressSpeed) {
@@ -600,6 +608,16 @@ function doAutoDrawBow() {
 	} else if (event_press(XB1_LT)) isDrawBow = TRUE
 }
 
+function doDrawBow() {
+	// Hold X while LT is held
+	if (get_val(XB1_LT) > 0) {
+		set_val(XB1_X, 100)
+		isDrawBow = TRUE
+	} else {
+		isDrawBow = FALSE
+	}
+}
+
 function stopAutoDrawBow() {
 	equippedArrow = 0
 	isDrawBow = FALSE
@@ -659,14 +677,74 @@ function IS_MAGIC_ARCHER() {
 	return selectedClass == 3
 }
 
+function isToggleDrawBowMode() {
+	return selectedMode == 0
+}
+
 function changeClass(direction) {
 	selectedClass = (selectedClass + direction + 4) % 4
+	
+	// Clear class variables
+	isGreatswordCombo = FALSE
+	isPrepareRapidPressA = FALSE
+	isBowAutoFire = FALSE
+	pressLTCount = 0
+	pressRTCount = 0
+	stopAutoDrawBow()
+	
 	scheduleOledUpdate()
+}
+
+function changeMode(direction) {
+	selectedMode = (selectedMode + direction + 2) % 2
+	scheduleOledUpdate()
+}
+
+function checkChangeClass() {
+	if (!classChanged && !modeChanged) {
+		if (isRightStickLeft() || isLeftStickLeft()) {
+			changeClass(PREV)
+			classChanged = TRUE
+		} else if (isRightStickRight() || isLeftStickRight()) {
+			changeClass(NEXT)
+			classChanged = TRUE
+		}
+		
+		if (classChanged) {
+			doHome = FALSE
+			if(isRightStickLeft() || isRightStickRight()) changedWithStick = XB1_RX
+			else changedWithStick = XB1_LX
+		}
+	} else if (abs(get_ival(changedWithStick)) < DEADZONE) {
+		classChanged = FALSE
+	}
+}
+
+function checkChangeMode() {
+	if (!modeChanged && !classChanged) {
+		if (isRightStickUp() || isLeftStickUp()) {
+			changeMode(NEXT)
+			modeChanged = TRUE
+		} else if (isRightStickDown() || isLeftStickDown()) {
+			changeMode(PREV)
+			modeChanged = TRUE
+		}
+		
+		if (modeChanged) {
+			doHome = FALSE
+			if(isRightStickUp() || isRightStickDown()) modeChangedWithStick = XB1_RY
+			else modeChangedWithStick = XB1_LY
+			scheduleOledUpdate()
+		}
+	} else if (abs(get_ival(modeChangedWithStick)) < DEADZONE) {
+		modeChanged = FALSE
+	}
 }
 
 function updateOled() {
 	if (Update) {
         paint(Classes[selectedClass], Center, 27, FontSmall, White, String)
+		paint(MagicArcherModes[selectedMode], Center, 37, FontSmall, White, String)
 		Update = FALSE
     }
 }
