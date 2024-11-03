@@ -1,15 +1,15 @@
 // region OLED DEFINITIONS
 define White = OLED_WHITE
 define Black = OLED_BLACK
-define Small = OLED_FONT_SMALL
-define Medium = OLED_FONT_MEDIUM
-define Large = OLED_FONT_LARGE
-define Small_Width = OLED_FONT_SMALL_WIDTH
-define Medium_Width = OLED_FONT_MEDIUM_WIDTH
-define Large_Width = OLED_FONT_LARGE_WIDTH
-define Small_Height = OLED_FONT_SMALL_HEIGHT
-define Medium_Height = OLED_FONT_MEDIUM_HEIGHT
-define Large_Height = OLED_FONT_LARGE_HEIGHT
+define FontSmall = OLED_FONT_SMALL
+define FontMedium = OLED_FONT_MEDIUM
+define FontLarge = OLED_FONT_LARGE
+define FontWidthSmall = OLED_FONT_SMALL_WIDTH
+define FontWidthMedium = OLED_FONT_MEDIUM_WIDTH
+define FontWidthLarge = OLED_FONT_LARGE_WIDTH
+define FontHeightSmall = OLED_FONT_SMALL_HEIGHT
+define FontHeightMedium = OLED_FONT_MEDIUM_HEIGHT
+define FontHeightLarge = OLED_FONT_LARGE_HEIGHT
 define Left = -1
 define Center = -2
 define Right = -3
@@ -52,8 +52,8 @@ define SET_AUTO_AIM = XB1_LB
 define SPEED_CAST_DEPLAY = 100
 define NEXT_CLASS = 1
 define PREV_CLASS = -1
-int selectedClass // 0: No Class, 1: Warrior, 2: Mage, 3: Magic Archer
 int classChanged
+int selectedClass // 0: No Class, 1: Warrior, 2: Mage, 3: Magic Archer
 const string Classes[] = {"No Class", "Warrior", "Mage", "Magic Archer"}
 
 // OTHERS
@@ -337,7 +337,7 @@ main {
     }
 	
 	if (Update) {
-        paint(Classes[selectedClass], Center, 27, Small, White, String)
+        paint(Classes[selectedClass], Center, 27, FontSmall, White, String)
 		Update = FALSE
     }
 }
