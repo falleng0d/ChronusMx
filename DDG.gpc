@@ -91,7 +91,7 @@ init {
 	adt_off(XB1_LT)
 	adt_off(XB1_RT)
 	reset_leds()
-    updateOled()
+    scheduleOledUpdate()
 }
 
 main {
@@ -320,17 +320,8 @@ main {
 	}
 	
 	// OLED
-	OledClear = max(0, OledClear - get_rtime())
-    if (OledClear) {
-        if (OledClear <= get_rtime()) {
-            cls_oled(0)
-        }
-    }
-	
-	if (Update) {
-        paint(Classes[selectedClass], Center, 27, FontSmall, White, String)
-		Update = FALSE
-    }
+	clearOled()
+	updateOled()
 }
 
 // region SHARED UTILITIES
@@ -561,10 +552,19 @@ function find_digits(f_num) {
     return 1
 }
 
-function updateOled() {
+function scheduleOledUpdate() {
     cls_oled(0)
     Update = TRUE
     OledClear = 10000
+}
+
+function clearOled() {
+	OledClear = max(0, OledClear - get_rtime())
+    if (OledClear) {
+        if (OledClear <= get_rtime()) {
+            cls_oled(0)
+        }
+    }
 }
 
 // endregion
@@ -661,7 +661,14 @@ function IS_MAGIC_ARCHER() {
 
 function changeClass(direction) {
 	selectedClass = (selectedClass + direction + 4) % 4
-	updateOled()
+	scheduleOledUpdate()
+}
+
+function updateOled() {
+	if (Update) {
+        paint(Classes[selectedClass], Center, 27, FontSmall, White, String)
+		Update = FALSE
+    }
 }
 
 // endregion
