@@ -58,6 +58,8 @@ const string Modes[] = {"No Toggle", "Toggle"}
 // OTHERS
 int walkDirectionY, isAutoWalkingY
 int doStart, doSelect, doHome
+int pressLTCount, toggleAutoLTSkill
+int pressRTCount, toggleAutoRTSkill
 
 // OLED
 int Update, OledClear, stringLength, n, i
@@ -107,16 +109,30 @@ main {
 	if (IS_WARRIOR()) {
 		if (IS_TOGGLE()) {
 			// Auto Skill
-			if (get_val(XB1_RT)) {
-				combo_run(auto_skill_rt)
-			} else {
-				combo_stop(auto_skill_rt)
+			if (!toggleAutoLTSkill) {
+				toggleAutoLTSkill = isRapidDoublePressLT()
+			} else if (isAnyAxbyPressed() || event_press(XB1_LT)) {
+				toggleAutoLTSkill = FALSE
 			}
 			
-			if (get_val(XB1_LT)) {
+			if (get_val(XB1_LT) || toggleAutoLTSkill) {
 				combo_run(auto_skill_lt)
+				set_val(XB1_LT, 100)
 			} else {
 				combo_stop(auto_skill_lt)
+			}
+			
+			if (!toggleAutoRTSkill) {
+				toggleAutoRTSkill = isRapidDoublePressRT()
+			} else if (isAnyAxbyPressed() || event_press(XB1_RT)) {
+				toggleAutoRTSkill = FALSE
+			}
+			
+			if (get_val(XB1_RT) || toggleAutoRTSkill) {
+				combo_run(auto_skill_rt)
+				set_val(XB1_RT, 100)
+			} else {
+				combo_stop(auto_skill_rt)
 			}
 		} else {
 			combo_stop(auto_skill_rt)
@@ -125,10 +141,8 @@ main {
 	}
 
 	// Auto Run
-	if (isAutoWalkingY) {
-		if(event_press(GET_SELECT)){
-			combo_run(l3)
-		}
+	if (isAutoWalkingY && event_press(GET_SELECT)) {
+		combo_run(l3)
 	}
 
 	// Auto Walk Y
@@ -219,7 +233,7 @@ function finger_trigger_left_analog(tolerance) {
 	}
 }
 
-function is_any_axby_pressed() {
+function isAnyAxbyPressed() {
 	if(get_val(XB1_A) > 0 || get_val(XB1_B) > 0 || get_val(XB1_X) > 0 || get_val(XB1_Y) > 0) {
 		return 100
 	}
@@ -303,30 +317,6 @@ function isLeftStickUp() {
 
 function isLeftStickDown() {
 	return get_ival(XB1_LY) >= (MENU_DEADZONE * DIR_RIGHT)
-}
-
-function toggleAutoAimOnDoublePress(doublePressSpeed) {
-	if(!isAutoAiming && event_press(GET_LB)) {
-		taps = 3
-	}
-	if(!isAutoAiming && taps >= 2) {
-		isAutoAiming = TRUE; //make isAutoRunning_00 true if false, false if true
-		isAutoAimJustStarted = TRUE
-		isContinueAutoAimAfterReleaseSnipeButton = TRUE
-		isDoContinueAutoAim = TRUE
-		tapExpire = 0
-		taps = 0
-	// 	set_val(PRESS_LB, 0)
-	} else {
-		if (isAutoAiming && !isDoContinueAutoAim && event_release(GET_LB)) {
-			combo_stop(snipe)
-			isAutoAiming = FALSE
-			taps = 0
-			set_val(PRESS_LB, 0)
-		}
-	}
-
-	return isAutoAiming
 }
 
 function isRapidMultiPress(btA, btB) {
@@ -436,9 +426,44 @@ function clearOled() {
 // endregion
 
 // region SCRIPT SPECIFIC
+function isRapidDoublePressLT() {
+	if(event_press(XB1_LT)) {
+		if (pressLTCount == 0) {
+			pressLTCount = pressLTCount + 1
+		} else if (get_ptime(XB1_LT) < 200) {
+			pressLTCount = 0
+			return TRUE
+		}
+	}
+	
+	if(get_val(XB1_LT) == 0 && get_ptime(XB1_LT) > 300) {
+		pressLTCount = 0
+	}
+	
+	return FALSE
+}
+
+function isRapidDoublePressRT() {
+	if(event_press(XB1_RT)) {
+		if (pressRTCount == 0) {
+			pressRTCount = pressRTCount + 1
+		} else if (get_ptime(XB1_RT) < 200) {
+			pressRTCount = 0
+			return TRUE
+		}
+	}
+	
+	if(get_val(XB1_RT) == 0 && get_ptime(XB1_RT) > 300) {
+		pressRTCount = 0
+	}
+	
+	return FALSE
+}
 
 function onSelectMenu() {
 	isAutoWalkingY = FALSE
+	toggleAutoLTSkill = FALSE
+	toggleAutoRTSkill = FALSE
 }
 
 function onHomeMenu() {
@@ -462,8 +487,11 @@ function isToggleDrawBowMode() {
 }
 
 function changeClass(direction) {
-	selectedClass = (selectedClass + direction + 4) % 4
+	selectedClass = (selectedClass + direction + 2) % 2
 	scheduleOledUpdate()
+	
+	toggleAutoLTSkill = FALSE
+	toggleAutoRTSkill = FALSE
 }
 
 function changeMode(direction) {
