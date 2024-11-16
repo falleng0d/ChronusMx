@@ -46,31 +46,18 @@ define GET_HOME = XB1_XBOX
 define GET_LB = XB1_LB
 define PRESS_LB = XB1_LB
 
-// AUTO AIM
-define GET_AUTO_AIM = XB1_LB
-define SET_AUTO_AIM = XB1_LB
-
 // CLASS
-define SPEED_CAST_DEPLAY = 100
 define NEXT = 1
 define PREV = -1
 int classChanged, changedWithStick, modeChanged, modeChangedWithStick
-int selectedClass // 0: No Class, 1: Warrior, 2: Mage, 3: Magic Archer
-int selectedMode // 0: Toggle, 1: No Toggle
-const string Classes[] = {"No Class", "Warrior", "Mage", "Magic Archer", "Magic Archer"}
-const string MagicArcherModes[] = {"Toggle", "No Toggle"}
+int selectedClass // 0: No Class, 1: Warrior
+int selectedMode // 0: No Toggle, 1: Toggle
+const string Classes[] = {"No Class", "Warrior"}
+const string Modes[] = {"No Toggle", "Toggle"}
 
 // OTHERS
-int taps, tapExpire, isAutoAimJustStarted, isContinueAutoAimAfterReleaseSnipeButton
-int isAutoAiming, isDoContinueAutoAim
-int isPrepareRapidPressA
-int pressLTCount
-int pressRTCount, isGreatswordCombo
-int isDrawBow, isBowAutoFire, equippedArrow, firingArrow, skipRT
-
-int walkDirectionY, isAutoWalkingY, walkDirectionX, isAutoWalkingX
+int walkDirectionY, isAutoWalkingY
 int doStart, doSelect, doHome
-int didStartAction
 
 // OLED
 int Update, OledClear, stringLength, n, i
@@ -91,12 +78,12 @@ remap XB1_PR2 -> XB1_VIEW
 unmap XB1_SHARE
 
 init {
-	isContinueAutoAimAfterReleaseSnipeButton = TRUE
-	
 	adt_off(XB1_LT)
 	adt_off(XB1_RT)
 	reset_leds()
     scheduleOledUpdate()
+	selectedClass = 1
+	selectedMode = 0
 }
 
 main {
@@ -109,141 +96,21 @@ main {
 	set_right_triggers_threshold(1, 1)
 	
 	// Rapid Look Arroud
-	rapid_look_around_full_l(10)
-	if (IS_MAGIC_ARCHER() && (isBowAutoFire || isDrawBow)) rapid_look_around_full_r(5, 65)
-	else rapid_look_around_full_r(5, 70)
+	rapid_look_around_full_l(5)
+	rapid_look_around_full_r(5, 70)
 	
 	if(get_val(XB1_SHARE)) {
 		set_val(PRESS_SELECT, 100)
 		onSelectMenu()
 	}
 	
-	// Defend (PRESS A) on open skill menu (LT)
-	// set_val(TRACE_3, is_any_axby_pressed()); // debug
-	// if(get_val(XB1_LT) > 0 && !is_any_axby_pressed()) {
-	// 	set_val(XB1_X, 100)
-	// }
-	
 	if (IS_WARRIOR()) {
-		// Press XB1_X if XB1_LT is pressed twice in quick succession
-		if(event_press(XB1_LT)) {
-			if(pressLTCount == 0) {
-				pressLTCount = pressLTCount + 1
-			} else if (get_ptime(XB1_LT) < 200) {
-				pressLTCount = 0
-				combo_run(x)
-			}
-		}
-		
-		if(get_val(XB1_LT) == 0 && get_ptime(XB1_LT) > 300) {
-			pressLTCount = 0
-		}
-		
-		// Rapid fire on XB1_RT if pressed twice in quick succession
-		if(isGreatswordCombo) {
-			if (event_press(XB1_RT)) {
-				isGreatswordCombo = FALSE
-				combo_stop(greatswordSwing)
-			} else {
-				combo_run(greatswordSwing)
-			}
-		} else {
-			if (event_press(XB1_RT)) {
-				if (pressRTCount == 0) {
-					pressRTCount = pressRTCount + 1
-				} else if (get_ptime(XB1_RT) < 200) {
-					pressRTCount = 0
-					isGreatswordCombo = TRUE
-				}
-			}
-			
-			if(get_val(XB1_RT) == 0 && get_ptime(XB1_RT) > 300) {
-				pressRTCount = 0
-			}
-		}
-		
-		// Rapid press A if XB1_A is pressed for more than 300ms
-		if(event_press(XB1_A)) isPrepareRapidPressA = TRUE
-		if(event_release(XB1_A)) isPrepareRapidPressA = FALSE
-		
-		if(isPrepareRapidPressA && get_ival(XB1_A) > 0 && get_ptime(XB1_A) > 300) {
-			combo_run(a)
-		}
-	}
-	
-	if (IS_MAGE()) {
-		if(get_ival(XB1_LT) > 0) {
-			// If holding Y, hold X after SPEED_CAST_DEPLAY ms
-			if(get_ival(XB1_Y) > 0 && get_ptime(XB1_Y) > SPEED_CAST_DEPLAY) {
-				set_val(XB1_X, 100)
-			}
-			// If holding A, hold X after SPEED_CAST_DEPLAY ms
-			if(get_ival(XB1_A) > 0 && get_ptime(XB1_A) > SPEED_CAST_DEPLAY) {
-				set_val(XB1_X, 100)
-			}
-			// If holding B, hold X after SPEED_CAST_DEPLAY ms
-			if(get_ival(XB1_B) > 0 && get_ptime(XB1_B) > SPEED_CAST_DEPLAY) {
-				set_val(XB1_X, 100)
-			}
-			// If holding RT, hold X after SPEED_CAST_DEPLAY ms
-			if(get_ival(XB1_RT) > 0 && get_ptime(XB1_RT) > SPEED_CAST_DEPLAY) {
-				set_val(XB1_X, 100)
-			}
-		}
-	}
-	
-	if (IS_MAGIC_ARCHER()) {
-		// Auto Fire Bow on double press LT
-		if (isBowAutoFire) {
-			combo_run(autoFireBow)
-		} else {
-			if (isToggleDrawBowMode()) doAutoDrawBow()
-			else doDrawBow()
-		}
-		
-		isBowAutoFire = getIsBowAutoFire()
-	}
-	
-	if (skipRT) {
-		if (event_release(XB1_RT)) {
-			skipRT = FALSE
-		} else {
-			set_val(XB1_RT, 0)
-		}
-	}
-	
-	// Auto Aim
-	if(!isAutoAiming) {
-		if(event_release(GET_LB)) {
-			isAutoAiming = TRUE
-			// isAutoAimJustStarted = TRUE
-			isContinueAutoAimAfterReleaseSnipeButton = TRUE
-		}
-	}
-
-	if(isAutoAiming) {
-		// if (isAutoAimJustStarted == FALSE && get_ptime(GET_LB) < 250 && event_release(GET_LB)) {
-		// 	isAutoAiming = FALSE
-		// }
-		if(event_release(GET_LB)) {
-			isAutoAiming = FALSE
-		}
-		
-		swap(XB1_LB, TRACE_1)
-		set_val(PRESS_LB, 100)
-		
-		if (!get_val(TRACE_1)) {
-			isAutoAimJustStarted = FALSE
-		}
 	}
 
 	// Auto Run
 	if (isAutoWalkingY) {
 		if(event_press(GET_SELECT)){
 			combo_run(l3)
-			isGreatswordCombo = FALSE
-			stopAutoDrawBow()
-			stopAutoFireBow()
 		}
 	}
 
@@ -262,29 +129,17 @@ main {
 		}
 	}
 	
+	// START HOTKEY
 	if (get_val(GET_START) == 100) {
 		set_val(XB1_A, 100)
 	}
 
-	// SELECT HOTKEY + BUTTON
-	if (event_release(GET_SELECT)) {
-		if (doSelect) {
-			doSelect = FALSE
-			onSelectMenu()
-			combo_run(OpenStartMenu)
-		} else if (isAutoWalkingY == FALSE && isAutoWalkingX == FALSE) {
-			set_val(XB1_A, 100)
-		}
-	} else if (get_val(GET_SELECT) == 100 && isAutoWalkingY == FALSE && isAutoWalkingX == FALSE) {
-		if (get_ptime(GET_SELECT) > 400) {
-			// doSelect = TRUE
-			set_val(XB1_A, 100)
-		} else {
-			set_val(XB1_A, 100)
-		}
+	// SELECT HOTKEY
+	if (get_val(GET_SELECT) == 100) {
+		set_val(XB1_B, 100)
 	}
 
-	// HOME HOTKEY + BUTTON
+	// HOME HOTKEY
 	if (event_release(GET_HOME)) {
         if (doHome) {
 			onHomeMenu()
@@ -300,7 +155,6 @@ main {
 	// OLED
 	// clearOled()
 	updateOled()
-	set_val(TRACE_2, selectedMode)
 }
 
 // region SHARED UTILITIES
@@ -566,123 +420,24 @@ function clearOled() {
 
 // region SCRIPT SPECIFIC
 
-function doAutoDrawBow() {
-	// Hold X upon pressing LT and releasing upon pressing any of (A, B, X, Y, LT, RT)
-	if (isDrawBow && (event_press(XB1_LT) || event_press(XB1_LB))) {
-		stopAutoDrawBow()
-		return
-	}
-	
-	if (isDrawBow) {
-		set_val(XB1_X, 100)
-		
-		set_val(TRACE_3, equippedArrow)
-		set_val(TRACE_4, getEquippedArrow())
-		if (!equippedArrow || (getEquippedArrow() != equippedArrow && getEquippedArrow() != XB1_RT)) {
-			equippedArrow = getEquippedArrow()
-			return
-		}
-		
-		if (equippedArrow && event_press(XB1_RT)) {
-			firingArrow = equippedArrow
-			
-			if (equippedArrow != XB1_RT) {
-				skipRT = TRUE
-			}
-			
-			combo_run(fireArrow)
-		}
-	} else if (event_press(XB1_LT)) isDrawBow = TRUE
-}
-
-function doDrawBow() {
-	// Hold X while LT is held
-	if (get_val(XB1_LT) > 0) {
-		set_val(XB1_X, 100)
-		isDrawBow = TRUE
-	} else {
-		isDrawBow = FALSE
-	}
-}
-
-function stopAutoFireBow() {
-	isBowAutoFire = FALSE
-	combo_stop(autoFireBow)
-}
-
-function stopAutoDrawBow() {
-	equippedArrow = 0
-	isDrawBow = FALSE
-	skipRT = FALSE
-	combo_stop(releaseBow)
-}
-
-function onStartBowAutoFire() {
-	stopAutoDrawBow()
-}
-
-function getIsBowAutoFire() {
-	if (!isBowAutoFire) {
-		if (event_press(XB1_LT)) {
-			if (pressLTCount == 0) {
-				pressLTCount = pressLTCount + 1
-			} else if (get_ptime(XB1_LT) < 200) {
-				pressLTCount = 0
-				onStartBowAutoFire()
-				return TRUE
-			}
-		}
-		
-		if (get_val(XB1_LT) == 0 && get_ptime(XB1_LT) > 300) {
-			pressLTCount = 0
-		}
-	} else if (event_press(XB1_LT) || event_press(XB1_LB)) {
-		combo_stop(autoFireBow)
-		return FALSE
-	}
-	
-	return isBowAutoFire
-}
-
 function onSelectMenu() {
 	isAutoWalkingY = FALSE
-	isAutoWalkingX = FALSE
-	isAutoAiming = FALSE
-	isGreatswordCombo = FALSE
-	stopAutoDrawBow()
-	stopAutoFireBow()
 }
 
 function onHomeMenu() {
 	onSelectMenu()
 }
 
-function getEquippedArrow() {
-	if (event_press(XB1_A)) {
-		return XB1_A
-	} else if (event_press(XB1_B)) {
-		return XB1_B
-	} else if (event_press(XB1_X)) {
-		return XB1_X
-	} else if (event_press(XB1_Y)) {
-		return XB1_Y
-	} else if (event_press(XB1_RT)) {
-		return XB1_RT
-	}
-	
-	return equippedArrow
+function onStartMenu() {
+	onSelectMenu()
 }
 
 function IS_WARRIOR() {
 	return selectedClass == 1
 }
 
-function IS_MAGE() {
-	return selectedClass == 2
-}
-
-function IS_MAGIC_ARCHER() {
-	return selectedClass == 3
+function IS_TOGGLE() {
+	return selectedMode == 1
 }
 
 function isToggleDrawBowMode() {
@@ -691,16 +446,6 @@ function isToggleDrawBowMode() {
 
 function changeClass(direction) {
 	selectedClass = (selectedClass + direction + 4) % 4
-	
-	// Clear class variables
-	isGreatswordCombo = FALSE
-	isPrepareRapidPressA = FALSE
-	isBowAutoFire = FALSE
-	pressLTCount = 0
-	pressRTCount = 0
-	stopAutoDrawBow()
-	stopAutoFireBow()
-	
 	scheduleOledUpdate()
 }
 
@@ -753,7 +498,7 @@ function checkChangeMode() {
 function updateOled() {
 	if (Update) {
         paint(Classes[selectedClass], Center, 27, FontSmall, White, String)
-		paint(MagicArcherModes[selectedMode], Center, 37, FontSmall, White, String)
+		paint(Modes[selectedMode], Center, 37, FontSmall, White, String)
 		Update = FALSE
     }
 }
@@ -775,46 +520,9 @@ combo a {
 	set_val(XB1_A, 100)
 }
 
-combo greatswordSwing {
-	set_val(XB1_RT, 100)
-	wait(50)
-	set_val(XB1_RT, 0)
-	wait(1000)
-}
-
-combo releaseBow {
-	set_val(XB1_X, 100)
-	wait(3000)
-}
-
-combo autoFireBow {
-	set_val(XB1_X, 100)
-	wait(1400)
-	set_val(XB1_X, 0)
-	wait(100)
-}
-
-combo fireArrow {
-	set_val(firingArrow, 100)
-	wait(50)
-	set_val(firingArrow, 0)
-	wait(50)
-	set_val(firingArrow, 100)
-	wait(50)
-	set_val(firingArrow, 0)
-	wait(100)
-	set_val(firingArrow, 100)
-	wait(50)
-}
-
 combo x {
 	set_val(XB1_X, 100)
 	wait(100)
-}
-
-combo snipe {
-	set_val(XB1_RS, 100)
-	wait(50)
 }
 
 combo OpenStartMenu {
