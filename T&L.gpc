@@ -148,8 +148,6 @@ main {
 	if (skipB && event_release(PRESS_SELECT)) {
 		skipB = FALSE
 	}
-	
-	set_val(TRACE_3, skipB)
 
 	// Auto Walk Y
 	if(isAutoWalkingY) {
