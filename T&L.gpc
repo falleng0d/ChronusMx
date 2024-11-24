@@ -58,8 +58,9 @@ const string Modes[] = {"No Toggle", "Toggle"}
 // OTHERS
 int walkDirectionY, isAutoWalkingY
 int doStart, doSelect, doHome
-int pressLTCount, toggleAutoLTSkill
+int pressRBCount, toggleAutoRBSkill
 int pressRTCount, toggleAutoRTSkill
+int skipB
 
 // OLED
 int Update, OledClear, stringLength, n, i
@@ -109,17 +110,10 @@ main {
 	if (IS_WARRIOR()) {
 		if (IS_TOGGLE()) {
 			// Auto Skill
-			if (!toggleAutoLTSkill) {
-				toggleAutoLTSkill = isRapidDoublePressLT()
-			} else if (isAnyAxbyPressed() || event_press(XB1_LT)) {
-				toggleAutoLTSkill = FALSE
-			}
-			
-			if (get_val(XB1_LT) || toggleAutoLTSkill) {
-				combo_run(auto_skill_lt)
-				set_val(XB1_LT, 100)
-			} else {
-				combo_stop(auto_skill_lt)
+			if (!toggleAutoRBSkill) {
+				toggleAutoRBSkill = isRapidDoublePressRB()
+			} else if (isAnyAxbyPressed() || event_press(XB1_RB)) {
+				toggleAutoRBSkill = FALSE
 			}
 			
 			if (!toggleAutoRTSkill) {
@@ -128,22 +122,32 @@ main {
 				toggleAutoRTSkill = FALSE
 			}
 			
-			if (get_val(XB1_RT) || toggleAutoRTSkill) {
-				combo_run(auto_skill_rt)
+			if (get_val(XB1_RB) || toggleAutoRBSkill) {
+				combo_run(auto_skill_abyx)
+				set_val(XB1_RB, 100)
+			} else if (get_val(XB1_RT) || toggleAutoRTSkill) {
+				combo_run(auto_skill_abyx)
 				set_val(XB1_RT, 100)
 			} else {
-				combo_stop(auto_skill_rt)
+				combo_stop(auto_skill_abyx)
 			}
+			
 		} else {
-			combo_stop(auto_skill_rt)
-			combo_stop(auto_skill_lt)
+			combo_stop(auto_skill_abyx)
 		}
 	}
 
 	// Auto Run
 	if (isAutoWalkingY && event_press(GET_SELECT)) {
 		combo_run(l3)
+		skipB = TRUE
 	}
+	
+	if (skipB && event_release(PRESS_SELECT)) {
+		skipB = FALSE
+	}
+	
+	set_val(TRACE_3, skipB)
 
 	// Auto Walk Y
 	if(isAutoWalkingY) {
@@ -166,7 +170,7 @@ main {
 	}
 
 	// SELECT HOTKEY
-	if (get_val(GET_SELECT) == 100) {
+	if (get_val(GET_SELECT) == 100 && !skipB) {
 		set_val(XB1_B, 100)
 	}
 
@@ -426,18 +430,18 @@ function clearOled() {
 // endregion
 
 // region SCRIPT SPECIFIC
-function isRapidDoublePressLT() {
-	if(event_press(XB1_LT)) {
-		if (pressLTCount == 0) {
-			pressLTCount = pressLTCount + 1
-		} else if (get_ptime(XB1_LT) < 200) {
-			pressLTCount = 0
+function isRapidDoublePressRB() {
+	if(event_press(XB1_RB)) {
+		if (pressRBCount == 0) {
+			pressRBCount = pressRBCount + 1
+		} else if (get_ptime(XB1_RB) < 200) {
+			pressRBCount = 0
 			return TRUE
 		}
 	}
 	
-	if(get_val(XB1_LT) == 0 && get_ptime(XB1_LT) > 300) {
-		pressLTCount = 0
+	if(get_val(XB1_RB) == 0 && get_ptime(XB1_RB) > 300) {
+		pressRBCount = 0
 	}
 	
 	return FALSE
@@ -462,7 +466,7 @@ function isRapidDoublePressRT() {
 
 function onSelectMenu() {
 	isAutoWalkingY = FALSE
-	toggleAutoLTSkill = FALSE
+	toggleAutoRBSkill = FALSE
 	toggleAutoRTSkill = FALSE
 }
 
@@ -490,7 +494,7 @@ function changeClass(direction) {
 	selectedClass = (selectedClass + direction + 2) % 2
 	scheduleOledUpdate()
 	
-	toggleAutoLTSkill = FALSE
+	toggleAutoRBSkill = FALSE
 	toggleAutoRTSkill = FALSE
 }
 
@@ -553,14 +557,22 @@ function updateOled() {
 // region COMBOS
 
 // ABYX
-combo auto_skill_rt {
+combo auto_skill_abyx {
 	set_val(XB1_A, 100)
-	wait(30)
-	set_val(XB1_A, 0)
-	wait(30)
 	set_val(XB1_B, 100)
 	wait(30)
+	set_val(XB1_A, 0)
 	set_val(XB1_B, 0)
+	wait(30)
+	set_val(XB1_A, 100)
+	set_val(XB1_B, 100)
+	wait(30)
+	set_val(XB1_A, 0)
+	set_val(XB1_B, 0)
+	wait(30)
+	set_val(XB1_Y, 100)
+	wait(30)
+	set_val(XB1_Y, 0)
 	wait(30)
 	set_val(XB1_Y, 100)
 	wait(30)
@@ -569,26 +581,6 @@ combo auto_skill_rt {
 	set_val(XB1_X, 100)
 	wait(30)
 	set_val(XB1_X, 0)
-	wait(30)
-}
-
-// DOWN, RIGHT, UP, LEFT
-combo auto_skill_lt {
-	set_val(XB1_DOWN, 100)
-	wait(30)
-	set_val(XB1_DOWN, 0)
-	wait(30)
-	set_val(XB1_RIGHT, 100)
-	wait(30)
-	set_val(XB1_RIGHT, 0)
-	wait(30)
-	set_val(XB1_UP, 100)
-	wait(30)
-	set_val(XB1_UP, 0)
-	wait(30)
-	set_val(XB1_LEFT, 100)
-	wait(30)
-	set_val(XB1_LEFT, 0)
 	wait(30)
 }
 
