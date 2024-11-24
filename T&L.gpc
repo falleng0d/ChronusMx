@@ -556,34 +556,89 @@ function updateOled() {
 
 // region COMBOS
 
-// ABYX
 combo auto_skill_abyx {
-	set_val(XB1_A, 100)
-	set_val(XB1_B, 100)
-	wait(30)
-	set_val(XB1_A, 0)
-	set_val(XB1_B, 0)
-	wait(30)
-	set_val(XB1_A, 100)
-	set_val(XB1_B, 100)
-	wait(30)
-	set_val(XB1_A, 0)
-	set_val(XB1_B, 0)
-	wait(30)
-	set_val(XB1_Y, 100)
-	wait(30)
-	set_val(XB1_Y, 0)
-	wait(30)
-	set_val(XB1_Y, 100)
-	wait(30)
-	set_val(XB1_Y, 0)
-	wait(30)
-	set_val(XB1_X, 100)
-	wait(30)
-	set_val(XB1_X, 0)
-	wait(30)
+    // Order: X-LEFT, Y, B, A, UP, RIGHT, DOWN
+    
+    // Start
+    wait(10)
+    
+    // Press X and LEFT Twice
+    set_val(XB1_X, 100)
+    set_val(XB1_LEFT, 100)
+    wait(30)
+    set_val(XB1_X, 0)
+    set_val(XB1_LEFT, 0)
+    wait(30)
+    set_val(XB1_X, 100)
+    set_val(XB1_LEFT, 100)
+    wait(30)
+    set_val(XB1_X, 0)
+    set_val(XB1_LEFT, 0)
+    wait(30)
+    
+    // Press Y Twice
+    set_val(XB1_Y, 100)
+    wait(30)
+    set_val(XB1_Y, 0)
+    wait(30)
+    set_val(XB1_Y, 100)
+    wait(30)
+    set_val(XB1_Y, 0)
+    wait(30)
+    
+    // Press B Twice
+    set_val(XB1_B, 100)
+    wait(30)
+    set_val(XB1_B, 0)
+    wait(30)
+    set_val(XB1_B, 100)
+    wait(30)
+    set_val(XB1_B, 0)
+    wait(30)
+    
+    // Press A Twice
+    set_val(XB1_A, 100)
+    wait(30)
+    set_val(XB1_A, 0)
+    wait(30)
+    set_val(XB1_A, 100)
+    wait(30)
+    set_val(XB1_A, 0)
+    wait(30)
+    
+    // Press UP Twice
+    set_val(XB1_UP, 100)
+    wait(30)
+    set_val(XB1_UP, 0)
+    wait(30)
+    set_val(XB1_UP, 100)
+    wait(30)
+    set_val(XB1_UP, 0)
+    wait(30)
+    
+    // Press RIGHT Twice
+    set_val(XB1_RIGHT, 100)
+    wait(30)
+    set_val(XB1_RIGHT, 0)
+    wait(30)
+    set_val(XB1_RIGHT, 100)
+    wait(30)
+    set_val(XB1_RIGHT, 0)
+    wait(30)
+    
+    // Press DOWN Twice
+    set_val(XB1_DOWN, 100)
+    wait(30)
+    set_val(XB1_DOWN, 0)
+    wait(30)
+    set_val(XB1_DOWN, 100)
+    wait(30)
+    set_val(XB1_DOWN, 0)
+    wait(30)
+    
+    // End
+    wait(20)
 }
-
 combo l3 {
 	set_val(XB1_LS, 100)
 	wait(200)
