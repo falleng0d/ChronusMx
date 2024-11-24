@@ -141,6 +141,8 @@ main {
 	if (isAutoWalkingY && event_press(GET_SELECT)) {
 		combo_run(l3)
 		skipB = TRUE
+		toggleAutoRBSkill = FALSE
+		toggleAutoRTSkill = FALSE
 	}
 	
 	if (skipB && event_release(PRESS_SELECT)) {
