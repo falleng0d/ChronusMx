@@ -50,6 +50,8 @@ main {
 
 	set_left_triggers_threshold(1)
 	set_right_triggers_threshold(1, 1)
+	
+	swap(XB1_UP, XB1_LB)
 
 	// Rapid Look Arroud
 	rapid_look_around_full_l(10)
@@ -99,9 +101,18 @@ main {
 		isRapidPressA = FALSE
 	}
 	
-	if (isRapidPressA) combo_run(a)
-
-	// START HOTKEY
+	if (pickupMode) {
+		if (event_press(XB1_A) || event_press(XB1_MENU)) {
+			pickupMode = FALSE
+		} else {
+			set_val(XB1_A, 100)
+		}
+	}
+	
+	if (isRapidPressA) {
+		pickupMode = FALSE
+		combo_run(a)
+	}
 
 	// START HOTKEY
 	if (get_val(GET_START) == 100) {
@@ -125,8 +136,9 @@ main {
 	}
 	
 	// SHARE HOTKEY
-	if(get_val(GET_SHARE)) {
+	if(event_press(GET_SHARE)) {
 		pickupMode = !pickupMode
+		isRapidPressA = FALSE
 	}
 }
 
