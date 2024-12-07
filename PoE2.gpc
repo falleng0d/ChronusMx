@@ -54,6 +54,8 @@ define SET_AUTO_AIM = XB1_LB
 int angleDegree, isAutoWalkingAngle
 int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
 int autoWalkAngleCancelationKey
+int isToggleRT, pressRTCount
+int didHoldY
 
 // LOCAL VARIABLES (for easier code reading)
 int angle_deg // used on rapid_look_around_8_directions_l
@@ -63,7 +65,6 @@ remap XB1_PR1 -> XB1_MENU
 
 // PRESS HOME
 unmap XB1_XBOX
-remap XB1_XBOX -> XB1_Y
 
 // PRESS SELECT
 remap XB1_VIEW -> XB1_PR2
@@ -75,8 +76,11 @@ remap XB1_PR2 -> XB1_VIEW
 // PRESS SHARE
 unmap XB1_SHARE
 
-unmap XB1_RX
-unmap XB1_RY
+remap XB1_RB -> XB1_RT
+remap XB1_RT -> XB1_RB
+
+define PRESS_RB = XB1_RT
+define PRESS_RT = XB1_RB
 
 init {
 	set_val(TRACE_6, 1)
@@ -86,16 +90,23 @@ main {
 	adt_off(XB1_LT)
 	adt_off(XB1_RT)
 
-	set_left_triggers_threshold(10)
-	set_right_triggers_threshold(10, 1)
+	set_left_triggers_threshold(1)
+	set_right_triggers_threshold(1, 1)
+	rapid_look_around_full_r(10)
 
+	// region Auto Walk Angle
+	
 	if(isAutoWalkingAngle) {
 		if (event_press(GET_HOME)) {
 			autoWalkAngleCancelationKey = GET_HOME
 			isAutoWalkingAngle = FALSE
 		}
-		if (event_press(XB1_RT)) {
-			autoWalkAngleCancelationKey = XB1_RT
+		if (event_press(XB1_SHARE)) {
+			autoWalkAngleCancelationKey = XB1_SHARE
+			isAutoWalkingAngle = FALSE
+		}
+		if (event_press(XB1_XBOX)) {
+			autoWalkAngleCancelationKey = XB1_XBOX
 			isAutoWalkingAngle = FALSE
 		}
 	}
@@ -166,15 +177,43 @@ main {
 			rapid_look_around_full_l(10)
 		}
 	}
-
-	rapid_look_around_full(10, get_val(XB1_RX), get_val(XB1_RY), POLAR_RS, POLAR_LS)
+	
+	// endregion
+	
+	// region Press LB + RT on hold XB1_Y
+	
+	if (get_ival(XB1_Y) && get_ptime(XB1_Y) > 200 && !didHoldY) {
+		combo_stop(rt)
+		combo_run(hold_y)
+		didHoldY = TRUE
+	}
+	
+	if (event_release(XB1_Y)) {
+		if (!didHoldY) {
+			isToggleRT = FALSE
+			combo_stop(rt)
+		}
+		
+		didHoldY = FALSE
+	}
+	
+	// endregion
+	
+	// region Toggle XB1_RT on rapid double press XB1_RT
+	
+	if (!isToggleRT) {
+		isToggleRT = isRapidDoublePressRT()
+	} else if (event_press(XB1_RT) || event_press(XB1_X) || event_press(XB1_SHARE)) {
+		isToggleRT = FALSE
+		combo_stop(rt)
+	}
+	
+	if (isToggleRT && !get_ival(XB1_LB) && !didHoldY) combo_run(rt)
+	
+	// endregion
 
 	if (get_ival(GET_START)) {
-		if (get_ptime(GET_START) > 400) {
-			combo_run(rapid_fire_a)
-		} else {
-			set_val(XB1_A, 100)
-		}
+		set_val(XB1_A, 100)
 	}
 
 	if (get_ival(GET_SELECT)) {
@@ -182,9 +221,36 @@ main {
 	}
 
 	if(get_ival(XB1_SHARE)) {
+		// set_val(PRESS_SELECT, 100)
+	}
+	
+	if (get_ival(XB1_XBOX)) {
 		set_val(PRESS_SELECT, 100)
 	}
 }
+
+// region SCRIPT SPECIFIC
+
+function isRapidDoublePressRT() {
+	if(event_press(XB1_RT)) {
+		if (pressRTCount == 0) {
+			pressRTCount = pressRTCount + 1
+		} else if (get_ptime(XB1_RT) < 200) {
+			pressRTCount = 0
+			return TRUE
+		}
+	}
+	
+	if(get_ival(XB1_RT) == 0 && get_ptime(XB1_RT) > 300) {
+		pressRTCount = 0
+	}
+	
+	return FALSE
+}
+
+// endregion
+
+// region UTILITIES
 
 function get_radius(x, y) {
 	return isqrt(x * x + y * y)
@@ -380,17 +446,28 @@ function applyDeadzone(bt, deadzone) {
 	set_val(bt, useDeadzone(bt, 10))
 }
 
-combo l3 {
-	set_val(XB1_LS, 100)
-	wait(200)
-	set_val(XB1_LS, 0)
+// endregion
+
+combo hold_y {
+	set_val(XB1_Y, 0)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RT, 0)
+	wait(10)
+	set_val(XB1_LT, 100)
+	wait(70)
+	set_val(XB1_LT, 100)
+	set_val(PRESS_RT, 100)
+	wait(70)
+	set_val(XB1_LT, 100)
+	set_val(PRESS_RT, 0)
+	wait(70)
 }
 
-
-combo r3 {
-	set_val(XB1_RS, 100)
+combo rt {
+	set_val(XB1_RT, 100)
 	wait(50)
-	set_val(XB1_RS, 0)
+	set_val(XB1_RT, 0)
+	wait(50)
 }
 
 combo rapid_fire_a {
