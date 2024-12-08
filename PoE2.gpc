@@ -54,8 +54,9 @@ define SET_AUTO_AIM = XB1_LB
 int angleDegree, isAutoWalkingAngle
 int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
 int autoWalkAngleCancelationKey
-int isToggleRT, pressRTCount
-int didHoldY
+int isToggleRT, pressRTCount, skipCancelToggleRT
+int isHoldingRT
+int lastUsedAmmoKey
 
 // LOCAL VARIABLES (for easier code reading)
 int angle_deg // used on rapid_look_around_8_directions_l
@@ -180,35 +181,38 @@ main {
 	
 	// endregion
 	
-	// region Press LB + RT on hold XB1_Y
+	// region Press LB + RT on hold XB1_RT
 	
-	if (get_ival(XB1_Y) && get_ptime(XB1_Y) > 200 && !didHoldY) {
+	if (get_ival(XB1_RT) && get_ptime(XB1_RT) > 200 && !isHoldingRT) {
 		combo_stop(rt)
-		combo_run(hold_y)
-		didHoldY = TRUE
+		combo_run(hold_rt)
+		isHoldingRT = TRUE
+		skipCancelToggleRT = TRUE
 	}
 	
-	if (event_release(XB1_Y)) {
-		if (!didHoldY) {
-			isToggleRT = FALSE
-			combo_stop(rt)
-		}
-		
-		didHoldY = FALSE
+	if (event_release(XB1_RT)) {
+		isHoldingRT = FALSE
 	}
 	
 	// endregion
 	
-	// region Toggle XB1_RT on rapid double press XB1_RT
+	// region SCATTER SHOT: Press XB1_RB while RAPID FIRE -> skipCancelToggleRT
+	
+	if (isToggleRT && get_ival(XB1_RB)) {
+		skipCancelToggleRT = TRUE
+	}
+	
+	// endregion
+	
+	// region RAPID FIRE: Toggle XB1_RT on rapid double press XB1_RT
 	
 	if (!isToggleRT) {
 		isToggleRT = isRapidDoublePressRT()
-	} else if (event_press(XB1_RT) || event_press(XB1_X) || event_press(XB1_SHARE)) {
-		isToggleRT = FALSE
-		combo_stop(rt)
+	} else if (isCancelToggleRT()) {
+		cancelToggleRT()
 	}
 	
-	if (isToggleRT && !get_ival(XB1_LB) && !didHoldY) combo_run(rt)
+	if (isToggleRT && !get_ival(XB1_LB) && !isHoldingRT) combo_run(rt)
 	
 	// endregion
 
@@ -226,7 +230,12 @@ main {
 	
 	if (get_ival(XB1_XBOX)) {
 		set_val(PRESS_SELECT, 100)
+		lastUsedAmmoKey = 0
 	}
+	
+	//set_val(TRACE_3, XB1_RT)
+	
+	setLastUsedAmmoKey()
 }
 
 // region SCRIPT SPECIFIC
@@ -237,6 +246,7 @@ function isRapidDoublePressRT() {
 			pressRTCount = pressRTCount + 1
 		} else if (get_ptime(XB1_RT) < 200) {
 			pressRTCount = 0
+			skipCancelToggleRT = TRUE
 			return TRUE
 		}
 	}
@@ -246,6 +256,35 @@ function isRapidDoublePressRT() {
 	}
 	
 	return FALSE
+}
+
+function setLastUsedAmmoKey() {
+	if (event_press(XB1_X)) {
+		lastUsedAmmoKey = XB1_X
+	} else if (event_press(XB1_Y)) {
+		lastUsedAmmoKey = XB1_Y
+	}
+}
+
+function isCancelToggleRT() {
+	if (event_release(XB1_RT)) return XB1_RT
+	if (event_press(XB1_X)) return XB1_X
+	if (event_press(XB1_SHARE)) return XB1_SHARE
+	if (event_press(XB1_UP)) return XB1_UP
+	if (event_press(XB1_A)) return XB1_A
+	if (event_press(XB1_Y)) return XB1_Y
+	
+	return FALSE
+}
+
+function cancelToggleRT() {
+	if (skipCancelToggleRT) {
+		skipCancelToggleRT = FALSE
+		return
+	}
+	
+	isToggleRT = FALSE
+	combo_stop(rt)
 }
 
 // endregion
@@ -448,18 +487,61 @@ function applyDeadzone(bt, deadzone) {
 
 // endregion
 
-combo hold_y {
-	set_val(XB1_Y, 0)
+combo hold_rt {
 	set_val(XB1_LT, 0)
 	set_val(PRESS_RT, 0)
 	wait(10)
 	set_val(XB1_LT, 100)
+	set_val(PRESS_RT, 0)
 	wait(70)
 	set_val(XB1_LT, 100)
 	set_val(PRESS_RT, 100)
-	wait(70)
+	wait(100)
 	set_val(XB1_LT, 100)
 	set_val(PRESS_RT, 0)
+	
+	wait(70)
+	set_val(XB1_LT, 0)
+	wait(70)
+	
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 100)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 0)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 100)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 0)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 100)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 0)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 100)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 0)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 100)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 0)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(XB1_X, 100)
+	wait(70)
+	set_val(XB1_LT, 0)
+	set_val(XB1_X, 0)
+	wait(70)
+	set_val(XB1_LT, 0)
+	set_val(XB1_X, 100)
 	wait(70)
 }
 
