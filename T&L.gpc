@@ -29,7 +29,6 @@ define DIR_LEFT = -1
 define DIR_RIGHT = 1
 define true = TRUE
 define false = FALSE
-define L_STICK_TOLERANCE = 5
 define DEADZONE = 5
 define MENU_DEADZONE = 20
 define MAX_RADIUS = 32767
@@ -297,38 +296,6 @@ function isLeftAxisBackward(min_intensity) {
 	return get_val(XB1_LY) >= min_intensity
 }
 
-function isRightStickLeft() {
-	return get_ival(XB1_RX) < (MENU_DEADZONE * DIR_LEFT)
-}
-
-function isRightStickRight() {
-	return get_ival(XB1_RX) > (MENU_DEADZONE * DIR_RIGHT)
-}
-
-function isRightStickUp() {
-	return get_ival(XB1_RY) < (MENU_DEADZONE * DIR_LEFT)
-}
-
-function isRightStickDown() {
-	return get_ival(XB1_RY) >= (MENU_DEADZONE * DIR_RIGHT)
-}
-
-function isLeftStickLeft() {
-	return get_ival(XB1_LX) < (MENU_DEADZONE * DIR_LEFT)
-}
-
-function isLeftStickRight() {
-	return get_ival(XB1_LX) > (MENU_DEADZONE * DIR_RIGHT)
-}
-
-function isLeftStickUp() {
-	return get_ival(XB1_LY) < (MENU_DEADZONE * DIR_LEFT)
-}
-
-function isLeftStickDown() {
-	return get_ival(XB1_LY) >= (MENU_DEADZONE * DIR_RIGHT)
-}
-
 function isRapidMultiPress(btA, btB) {
 	if(event_press(btA) && get_ptime(btB) <= 100 ||
 		event_press(btB) && get_ptime(btA) <= 100){
@@ -368,6 +335,42 @@ function useDeadzone(bt, deadzone) {
 	}
 
 	return 0
+}
+
+// endregion
+
+// region OLED MENU UTILITIES
+
+function isRightStickLeft() {
+	return get_ival(XB1_RX) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isRightStickRight() {
+	return get_ival(XB1_RX) > (MENU_DEADZONE * DIR_RIGHT)
+}
+
+function isRightStickUp() {
+	return get_ival(XB1_RY) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isRightStickDown() {
+	return get_ival(XB1_RY) >= (MENU_DEADZONE * DIR_RIGHT)
+}
+
+function isLeftStickLeft() {
+	return get_ival(XB1_LX) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isLeftStickRight() {
+	return get_ival(XB1_LX) > (MENU_DEADZONE * DIR_RIGHT)
+}
+
+function isLeftStickUp() {
+	return get_ival(XB1_LY) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isLeftStickDown() {
+	return get_ival(XB1_LY) >= (MENU_DEADZONE * DIR_RIGHT)
 }
 
 // endregion
