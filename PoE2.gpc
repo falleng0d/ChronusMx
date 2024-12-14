@@ -120,89 +120,7 @@ main {
 	set_right_triggers_threshold(1, 1)
 	rapid_look_around_full_r(10)
 
-	// region Auto Walk Angle
-	
-	if(isAutoWalkingAngle) {
-		if (event_press(GET_HOME)) {
-			autoWalkAngleCancelationKey = GET_HOME
-			isAutoWalkingAngle = FALSE
-		} else if (event_press(XB1_SHARE)) {
-			autoWalkAngleCancelationKey = XB1_SHARE
-			isAutoWalkingAngle = FALSE
-		} else if (event_press(XB1_XBOX)) {
-			autoWalkAngleCancelationKey = XB1_XBOX
-			isAutoWalkingAngle = FALSE
-		}
-	}
-
-	if(autoWalkAngleCancelationKey) {
-		if(event_release(autoWalkAngleCancelationKey)) {
-			autoWalkAngleCancelationKey = 0
-		} else {
-			set_val(autoWalkAngleCancelationKey, 0)
-		}
-	}
-
-	// Check if the left joystick has moved past an initial circular radius X
-	if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), START_AREA)) {
-		// Capture the direction and angle of the joystick
-		if(event_press(GET_SELECT)) {
-			angleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
-			set_val(TRACE_1, angleDegree)
-			isAutoWalkingAngle = TRUE
-			isIgnoringChanges = TRUE
-		} else if (isAutoWalkingAngle) {
-			if (!isInsideCancelationArea) {
-				// If the new angle is not within X degrees of the previous angle cancel isAutoWalkingAngle
-				set_val(TRACE_2, angleDegree)
-				newAngleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
-				set_val(TRACE_3, newAngleDegree)
-				angleDifference = newAngleDegree - angleDegree
-				set_val(TRACE_4, angleDifference)
-				if(angleDifference <= 180 && abs(angleDifference) <= CANCEL_ANGLE) {
-					isAutoWalkingAngle = TRUE
-				} else if (angleDifference > 180 && abs(360 - angleDifference) <= CANCEL_ANGLE) {
-					isAutoWalkingAngle = TRUE
-				} else {
-					isAutoWalkingAngle = FALSE
-					set_val(TRACE_1, 0)
-				}
-			}
-
-			isInsideCancelationArea = TRUE
-		}
-	} else {
-		isInsideCancelationArea = FALSE
-	}
-
-	// Move the character in the direction of the captured angle
-	if(isAutoWalkingAngle) {
-		if(isIgnoringChanges) {
-			// wait for the joystick to move back inside the circular radius 30
-			isIgnoringChanges = !is_analog_inside_circle(get_ival(XB1_LX), get_ival(XB1_LY), IGNORE_AREA)
-			set_val(TRACE_5, isIgnoringChanges)
-		} else {
-			// Check if the left joystick has moved past the circular radius 70 (into the direction change area)
-			if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), CHANGE_AREA)) {
-				angleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
-				set_val(TRACE_1, angleDegree)
-			}
-		}
-
-		set_polar(POLAR_LS, -angleDegree, MAX_RADIUS)
-	} else {
-		applyDeadzone(XB1_RX, 10)
-		applyDeadzone(XB1_RY, 10)
-
-		if (is_analog_inside_circle(get_val(XB1_RX), get_val(XB1_RY), 10)) {
-			applyDeadzone(XB1_LX, 5)
-			applyDeadzone(XB1_LY, 5)
-
-			rapid_look_around_full_l(10)
-		}
-	}
-	
-	// endregion
+	autoWalkAngle()
 	
 	if (IS_MERCENARY()) {
 		if (IS_TOGGLE()) {
@@ -283,6 +201,88 @@ main {
 }
 
 // region SCRIPT SPECIFIC
+
+function autoWalkAngle() {
+	if(isAutoWalkingAngle) {
+		if (event_press(GET_HOME)) {
+			autoWalkAngleCancelationKey = GET_HOME
+			isAutoWalkingAngle = FALSE
+		} else if (event_press(XB1_SHARE)) {
+			autoWalkAngleCancelationKey = XB1_SHARE
+			isAutoWalkingAngle = FALSE
+		} else if (event_press(XB1_XBOX)) {
+			autoWalkAngleCancelationKey = XB1_XBOX
+			isAutoWalkingAngle = FALSE
+		}
+	}
+
+	if(autoWalkAngleCancelationKey) {
+		if(event_release(autoWalkAngleCancelationKey)) {
+			autoWalkAngleCancelationKey = 0
+		} else {
+			set_val(autoWalkAngleCancelationKey, 0)
+		}
+	}
+
+	// Check if the left joystick has moved past an initial circular radius X
+	if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), START_AREA)) {
+		// Capture the direction and angle of the joystick
+		if(event_press(GET_SELECT)) {
+			angleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
+			set_val(TRACE_1, angleDegree)
+			isAutoWalkingAngle = TRUE
+			isIgnoringChanges = TRUE
+		} else if (isAutoWalkingAngle) {
+			if (!isInsideCancelationArea) {
+				// If the new angle is not within X degrees of the previous angle cancel isAutoWalkingAngle
+				set_val(TRACE_2, angleDegree)
+				newAngleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
+				set_val(TRACE_3, newAngleDegree)
+				angleDifference = newAngleDegree - angleDegree
+				set_val(TRACE_4, angleDifference)
+				if(angleDifference <= 180 && abs(angleDifference) <= CANCEL_ANGLE) {
+					isAutoWalkingAngle = TRUE
+				} else if (angleDifference > 180 && abs(360 - angleDifference) <= CANCEL_ANGLE) {
+					isAutoWalkingAngle = TRUE
+				} else {
+					isAutoWalkingAngle = FALSE
+					set_val(TRACE_1, 0)
+				}
+			}
+
+			isInsideCancelationArea = TRUE
+		}
+	} else {
+		isInsideCancelationArea = FALSE
+	}
+
+	// Move the character in the direction of the captured angle
+	if(isAutoWalkingAngle) {
+		if(isIgnoringChanges) {
+			// wait for the joystick to move back inside the circular radius 30
+			isIgnoringChanges = !is_analog_inside_circle(get_ival(XB1_LX), get_ival(XB1_LY), IGNORE_AREA)
+			set_val(TRACE_5, isIgnoringChanges)
+		} else {
+			// Check if the left joystick has moved past the circular radius 70 (into the direction change area)
+			if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), CHANGE_AREA)) {
+				angleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
+				set_val(TRACE_1, angleDegree)
+			}
+		}
+
+		set_polar(POLAR_LS, -angleDegree, MAX_RADIUS)
+	} else {
+		applyDeadzone(XB1_RX, 10)
+		applyDeadzone(XB1_RY, 10)
+
+		if (is_analog_inside_circle(get_val(XB1_RX), get_val(XB1_RY), 10)) {
+			applyDeadzone(XB1_LX, 5)
+			applyDeadzone(XB1_LY, 5)
+
+			rapid_look_around_full_l(10)
+		}
+	}
+}
 
 function isRapidDoublePressRT() {
 	if(event_press(XB1_RT)) {
