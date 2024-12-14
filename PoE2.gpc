@@ -121,15 +121,11 @@ main {
 	autoWalkAngle()
 	
 	if (isMercenary()) {
-		if (isEasyCancel()) {
-		
-		}
+		preciseShotOnHoldRT()
+		preventRapidFireCancelationOnScatterShot(XB1_RB)
+		rapidFireOnDoublePressRT()
 	}
 	
-	preventRapidFireCancelationOnScatterShot(XB1_RB)
-	
-	rapidFireOnDoublePressRT()
-
 	if (get_ival(GET_START)) {
 		set_val(XB1_A, 100)
 	}
