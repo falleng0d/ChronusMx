@@ -126,6 +126,10 @@ main {
 		rapidFireOnDoublePressRT()
 	}
 	
+	if (isRanger()) {
+		rapidFireOnDoublePressRT()
+	}
+	
 	if (get_ival(GET_START)) {
 		set_val(XB1_A, 100)
 	}
@@ -165,6 +169,7 @@ main {
 
 /**
  * Press LB + RT on hold XB1_RT
+ *
  * @description Mercenary
  */
 function preciseShotOnHoldRT() {
@@ -185,6 +190,7 @@ function preciseShotOnHoldRT() {
  * Press XB1_RB while RAPID FIRE -> skipCancelToggleRT
  * skipCancelToggleRT is set to prevent the cancelation of the rapid fire combo
  * when pressing XB1_X to go back to the previous ammo type
+ *
  * @description Mercenary
  */
 function preventRapidFireCancelationOnScatterShot(scatterShotKey) {
@@ -197,6 +203,8 @@ function preventRapidFireCancelationOnScatterShot(scatterShotKey) {
  * RAPID FIRE
  * Rapidly press XB1_RT twice in quick succession to activate rapid fire mode
  * Press XB1_RT to cancel rapid fire mode (if easy cancel is enabled)
+ *
+ * @description Mercenary, Ranger
  */
 function rapidFireOnDoublePressRT() {
 	if (!isToggleRT) {
