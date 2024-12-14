@@ -55,8 +55,6 @@ define XB_B = XB1_B
 define XB_A = XB1_A
 define XB_X = XB1_X
 define XB_Y = XB1_Y
-define GET_L1 = XB1_LB
-define PRESS_L1 = XB1_LB
 
 // OLED
 define NEXT = 1
@@ -234,7 +232,6 @@ function rapidFireOnDoublePressRTWithArrowType() {
 		// Change arrow type
 		if (event_press(XB1_A)) arrowType = XB1_A
 		else if (event_press(XB1_X)) arrowType = XB1_X
-		// else if (event_press(XB1_B)) arrowType = XB1_B
 		else if (event_press(XB1_Y)) arrowType = XB1_Y
 		else if (event_press(XB1_RT)) arrowType = XB1_RT
 		
@@ -248,15 +245,14 @@ function rapidFireOnDoublePressRTWithArrowType() {
 			if (arrowType == XB1_RT) combo_run(rt)
 			else if (arrowType == XB1_A) combo_run(rapid_fire_a)
 			else if (arrowType == XB1_X) combo_run(rapid_fire_x)
-			// else if (arrowType == XB1_B) combo_run(rapid_fire_b)
 			else if (arrowType == XB1_Y) combo_run(rapid_fire_y)
 		}
 	}
 	
 	if (!isToggleRT) {
 		isToggleRT = isRapidDoublePressRT()
-		arrowType = XB1_RT
-		prevArrowType = XB1_RT
+		// arrowType = XB1_RT
+		// prevArrowType = XB1_RT
 	} else if (isCancelToggleRTArrow()) {
 		cancelToggleRT()
 	}
@@ -394,8 +390,8 @@ function isCancelToggleRTArrow() {
 	
 	if (event_press(XB1_A) && isEasyCancel()) return XB1_A
 	if (event_press(XB1_X) && isEasyCancel()) return XB1_X
-	if (event_press(XB1_B) && isEasyCancel()) return XB1_B
 	if (event_press(XB1_Y) && isEasyCancel()) return XB1_Y
+	if (event_press(GET_START) && isEasyCancel()) return XB1_Y
 	if (event_release(XB1_RT) && isEasyCancel()) return XB1_RT
 	
 	if(get_ival(XB1_X) && get_ptime(XB1_X) > 300) return TRUE
