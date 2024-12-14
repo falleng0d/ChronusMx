@@ -46,9 +46,12 @@ define GET_HOME = XB1_XBOX
 define GET_LB = XB1_LB
 define PRESS_LB = XB1_LB
 
-// CLASS
+// OLED
 define NEXT = 1
 define PREV = -1
+int Update, OledClear, stringLength, n, i
+
+// CLASS
 int classChanged, changedWithStick, modeChanged, modeChangedWithStick
 int selectedClass // 0: No Class, 1: Warrior
 int selectedMode // 0: No Toggle, 1: Toggle
@@ -61,9 +64,6 @@ int doStart, doSelect, doHome
 int pressRBCount, toggleAutoRBSkill
 int pressRTCount, toggleAutoRTSkill
 int skipB
-
-// OLED
-int Update, OledClear, stringLength, n, i
 
 remap XB1_MENU -> XB1_PR1
 remap XB1_PR1 -> XB1_MENU
@@ -436,6 +436,7 @@ function clearOled() {
 // endregion
 
 // region SCRIPT SPECIFIC
+
 function isRapidDoublePressRB() {
 	if(event_press(XB1_RB)) {
 		if (pressRBCount == 0) {
