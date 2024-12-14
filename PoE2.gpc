@@ -33,6 +33,8 @@ define DIR_LEFT = -1
 define DIR_RIGHT = 1
 define true = TRUE
 define false = FALSE
+define DEADZONE = 5
+define MENU_DEADZONE = 20
 define MAX_RADIUS = 32767
 
 // ANGLE AUTO WALK RELATED
@@ -144,13 +146,11 @@ main {
 	
 	if (get_ival(XB1_XBOX)) {
 		set_val(PRESS_SELECT, 100)
-		lastUsedAmmoKey = 0
 	}
 	
 	// HOME HOTKEY
 	if (event_release(GET_HOME)) {
         if (doHome) {
-			onHomeMenu()
 			combo_run(OpenHomeMenu)
 		} else {
 			doHome = TRUE
@@ -335,7 +335,7 @@ function isCancelToggleRT() {
 }
 
 function cancelToggleRT() {
-	if (EASY_CANCEL && skipCancelToggleRT) {
+	if (skipCancelToggleRT && isEasyCancel()) {
 		skipCancelToggleRT = FALSE
 		return
 	}
@@ -357,12 +357,14 @@ function isEasyCancel() {
 }
 
 function changeClass(direction) {
-	selectedClass = (selectedClass + direction + 2) % 3
+	selectedClass = (selectedClass + direction + 3) % 3
 	set_pvar(SPVAR_1, selectedClass)
 	scheduleOledUpdate()
 	
-	toggleAutoRBSkill = FALSE
-	toggleAutoRTSkill = FALSE
+	isHoldingRT = FALSE
+	isToggleRT = FALSE
+	skipCancelToggleRT = FALSE
+	pressRTCount = 0
 }
 
 function changeMode(direction) {
@@ -616,6 +618,42 @@ function useDeadzone(bt, deadzone) {
 
 function applyDeadzone(bt, deadzone) {
 	set_val(bt, useDeadzone(bt, 10))
+}
+
+// endregion
+
+// region OLED MENU UTILITIES
+
+function isRightStickLeft() {
+	return get_ival(XB1_RX) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isRightStickRight() {
+	return get_ival(XB1_RX) > (MENU_DEADZONE * DIR_RIGHT)
+}
+
+function isRightStickUp() {
+	return get_ival(XB1_RY) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isRightStickDown() {
+	return get_ival(XB1_RY) >= (MENU_DEADZONE * DIR_RIGHT)
+}
+
+function isLeftStickLeft() {
+	return get_ival(XB1_LX) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isLeftStickRight() {
+	return get_ival(XB1_LX) > (MENU_DEADZONE * DIR_RIGHT)
+}
+
+function isLeftStickUp() {
+	return get_ival(XB1_LY) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isLeftStickDown() {
+	return get_ival(XB1_LY) >= (MENU_DEADZONE * DIR_RIGHT)
 }
 
 // endregion
