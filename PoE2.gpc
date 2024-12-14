@@ -1,18 +1,28 @@
-// Reference
-// abs	Returns an absolute value of a number.
-// inv	Returns the inverse value of a number.
-// pow	Raise and value to the specified power.
-// isqrt	Calculates an integer square root.
-// random	Generates a random value between the specified range.
-// clamp	The clamp func clamps a value between an upper and lower bound.
-// min	Gets the minimum of two values.
-// max	Gets the maximum of two values.
-// get_polar	Gets the stick output at a given angle or radius with a high-resolution value.
-// get_ipolar	Gets the unmodified stick output at a given angle or radius with a high-resolution value.
-// POLAR_LS	Allows you to get a Angle or Radius for LEFT STICK.
-// POLAR_RS	Allows you to get a Angle or Radius for RIGHT STICK.
-// POLAR_ANGLE	You can get the angle from 0 to 359.
-// POLAR_RADIUS	You can get the radius from -32 768 to +32 767.
+// Game: Path of Exile 2
+//
+// Persistent Variables Reference:
+// - get_pvar(<pvar_constant>, <min_value>,  <max_value>, default_value>)
+// - set_pvar(<pvar_constant>, <value>)
+
+// region OLED DEFINITIONS
+define White = OLED_WHITE
+define Black = OLED_BLACK
+define FontSmall = OLED_FONT_SMALL
+define FontMedium = OLED_FONT_MEDIUM
+define FontLarge = OLED_FONT_LARGE
+define FontWidthSmall = OLED_FONT_SMALL_WIDTH
+define FontWidthMedium = OLED_FONT_MEDIUM_WIDTH
+define FontWidthLarge = OLED_FONT_LARGE_WIDTH
+define FontHeightSmall = OLED_FONT_SMALL_HEIGHT
+define FontHeightMedium = OLED_FONT_MEDIUM_HEIGHT
+define FontHeightLarge = OLED_FONT_LARGE_HEIGHT
+define Left = -1
+define Center = -2
+define Right = -3
+define String = 0
+define Value = 1
+define Oled = 2
+// endregion
 
 // UTILITIES
 define FORWARD = -40
@@ -47,9 +57,17 @@ define XB_Y = XB1_Y
 define GET_L1 = XB1_LB
 define PRESS_L1 = XB1_LB
 
-// AUTO AIM
-define GET_AUTO_AIM = XB1_LB
-define SET_AUTO_AIM = XB1_LB
+// OLED
+define NEXT = 1
+define PREV = -1
+int Update, OledClear, stringLength, n, i
+
+// CLASS
+int classChanged, changedWithStick, modeChanged, modeChangedWithStick
+int selectedClass
+const string Classes[] = {"No Class", "Mercenary", "Ranger"}
+int selectedMode
+const string Modes[] = {"Easy Cancel", "No Easy Cancel"}
 
 // ANGLE AUTO WALK
 int angleDegree, isAutoWalkingAngle
@@ -58,6 +76,9 @@ int autoWalkAngleCancelationKey
 int isToggleRT, pressRTCount, skipCancelToggleRT
 int isHoldingRT
 int lastUsedAmmoKey
+
+// OTHERS
+int doHome
 
 // LOCAL VARIABLES (for easier code reading)
 int angle_deg // used on rapid_look_around_8_directions_l
@@ -85,13 +106,16 @@ define PRESS_RB = XB1_RT
 define PRESS_RT = XB1_RB
 
 init {
+	adt_off(XB1_LT)
+	adt_off(XB1_RT)
+	reset_leds()
+	scheduleOledUpdate()
+	selectedClass = get_pvar(SPVAR_1, 0, 10, 1)
+	selectedMode = get_pvar(SPVAR_2, 0, 10, 0)
 	set_val(TRACE_6, 1)
 }
 
 main {
-	adt_off(XB1_LT)
-	adt_off(XB1_RT)
-
 	set_left_triggers_threshold(1)
 	set_right_triggers_threshold(1, 1)
 	rapid_look_around_full_r(10)
@@ -180,6 +204,12 @@ main {
 	
 	// endregion
 	
+	if (IS_MERCENARY()) {
+		if (IS_TOGGLE()) {
+		
+		}
+	}
+	
 	// region Press LB + RT on hold XB1_RT
 	
 	if (get_ival(XB1_RT) && get_ptime(XB1_RT) > 200 && !isHoldingRT) {
@@ -232,9 +262,24 @@ main {
 		lastUsedAmmoKey = 0
 	}
 	
-	//set_val(TRACE_3, XB1_RT)
+	// HOME HOTKEY
+	if (event_release(GET_HOME)) {
+        if (doHome) {
+			onHomeMenu()
+			combo_run(OpenHomeMenu)
+		} else {
+			doHome = TRUE
+        }
+	} else if (get_val(GET_HOME) == 100) {
+		checkChangeClass()
+		checkChangeMode()
+	}
 	
 	setLastUsedAmmoKey()
+	
+	// OLED
+	// clearOled()
+	updateOled()
 }
 
 // region SCRIPT SPECIFIC
@@ -289,9 +334,81 @@ function cancelToggleRT() {
 	combo_stop(rt)
 }
 
+function IS_MERCENARY() {
+	return selectedClass == 1
+}
+
+function IS_TOGGLE() {
+	return selectedMode == 1
+}
+
+function changeClass(direction) {
+	selectedClass = (selectedClass + direction + 2) % 3
+	set_pvar(SPVAR_1, selectedClass)
+	scheduleOledUpdate()
+	
+	toggleAutoRBSkill = FALSE
+	toggleAutoRTSkill = FALSE
+}
+
+function changeMode(direction) {
+	selectedMode = (selectedMode + direction + 2) % 2
+	set_pvar(SPVAR_2, selectedMode)
+	scheduleOledUpdate()
+}
+
+function checkChangeClass() {
+	if (!classChanged && !modeChanged) {
+		if (isRightStickLeft() || isLeftStickLeft()) {
+			changeClass(PREV)
+			classChanged = TRUE
+		} else if (isRightStickRight() || isLeftStickRight()) {
+			changeClass(NEXT)
+			classChanged = TRUE
+		}
+		
+		if (classChanged) {
+			doHome = FALSE
+			if(isRightStickLeft() || isRightStickRight()) changedWithStick = XB1_RX
+			else changedWithStick = XB1_LX
+		}
+	} else if (abs(get_ival(changedWithStick)) < DEADZONE) {
+		classChanged = FALSE
+	}
+}
+
+function checkChangeMode() {
+	if (!modeChanged && !classChanged) {
+		if (isRightStickUp() || isLeftStickUp()) {
+			changeMode(NEXT)
+			modeChanged = TRUE
+		} else if (isRightStickDown() || isLeftStickDown()) {
+			changeMode(PREV)
+			modeChanged = TRUE
+		}
+		
+		if (modeChanged) {
+			doHome = FALSE
+			if(isRightStickUp() || isRightStickDown()) modeChangedWithStick = XB1_RY
+			else modeChangedWithStick = XB1_LY
+			scheduleOledUpdate()
+		}
+	} else if (abs(get_ival(modeChangedWithStick)) < DEADZONE) {
+		modeChanged = FALSE
+	}
+}
+
+function updateOled() {
+	if (Update) {
+        paint(Classes[selectedClass], Center, 27, FontSmall, White, String)
+		paint(Modes[selectedMode], Center, 37, FontSmall, White, String)
+		Update = FALSE
+    }
+}
+
 // endregion
 
-// region UTILITIES
+// region SHARED UTILITIES
 
 function get_radius(x, y) {
 	return isqrt(x * x + y * y)
@@ -489,6 +606,71 @@ function applyDeadzone(bt, deadzone) {
 
 // endregion
 
+// region OLED UTILITIES
+
+function paint(f_string, f_x, f_y, f_font, f_color, f_type) {
+    if (f_type == String) {
+        print(xLocation(getStringLength(f_string), f_font, f_x), f_y, f_font, f_color, f_string)
+    } else if (f_type == Value) {
+        if (f_string < 0) { putc_oled(1, 45) }
+        if (f_string) {
+            for (n = find_digits(f_string) + i = (f_string < 0), f_string = abs(f_string); f_string > 0; n--, i++) {
+                putc_oled(n, f_string % 10 + 48)
+                f_string = f_string / 10
+            }
+        } else {
+            putc_oled(1, 48)
+            i = 1
+        }
+        puts_oled(xLocation(i, f_font, f_x), f_y, f_font, i, f_color)
+    } else if (f_type == Oled) {
+        putc_oled(1, f_string)
+        puts_oled(f_x, f_y, f_font, 1, f_color)
+    }
+}
+
+function getStringLength(offset) {
+    stringLength = 0
+    while (duint8(offset++)) { stringLength++ }
+    return stringLength + 1
+}
+
+function xLocation(f_chars, f_font, f_x) {
+    if (f_x == -3) { return 128 - ((f_chars * (7 + (f_font > 1) + f_font * 4)) + 3) }
+    if (f_x == -2) { return 64 - ((f_chars * (7 + (f_font > 1) + f_font * 4)) / 2) }
+    if (f_x == -1) { return 3 }
+    return f_x
+}
+
+function find_digits(f_num) {
+    for (n = 1; n < 11; n++) {
+        if (!(abs(f_num) / pow(10, n))) {
+            return n
+            break
+        }
+    }
+    return 1
+}
+
+function scheduleOledUpdate() {
+    cls_oled(0)
+    Update = TRUE
+    OledClear = 10000
+}
+
+function clearOled() {
+	OledClear = max(0, OledClear - get_rtime())
+    if (OledClear) {
+        if (OledClear <= get_rtime()) {
+            cls_oled(0)
+        }
+    }
+}
+
+// endregion
+
+// region COMBOS
+
 combo hold_rt {
 	set_val(XB1_LT, 0)
 	set_val(PRESS_RT, 0)
@@ -578,8 +760,9 @@ combo OpenSelectMenu {
 }
 
 combo OpenHomeMenu {
-	set_val(PRESS_HOME, 100)
+	set_val(PRESS_SELECT, 100)
 	wait(200)
-	set_val(PRESS_HOME, 0)
+	set_val(PRESS_SELECT, 0)
 }
- ����������������
+
+// endregion
