@@ -24,6 +24,7 @@ define DIR_RIGHT = 1
 define true = TRUE
 define false = FALSE
 define MAX_RADIUS = 32767
+define EASY_CANCEL = true
 
 // ANGLE AUTO WALK RELATED
 define CANCEL_ANGLE = 360
@@ -101,12 +102,10 @@ main {
 		if (event_press(GET_HOME)) {
 			autoWalkAngleCancelationKey = GET_HOME
 			isAutoWalkingAngle = FALSE
-		}
-		if (event_press(XB1_SHARE)) {
+		} else if (event_press(XB1_SHARE)) {
 			autoWalkAngleCancelationKey = XB1_SHARE
 			isAutoWalkingAngle = FALSE
-		}
-		if (event_press(XB1_XBOX)) {
+		} else if (event_press(XB1_XBOX)) {
 			autoWalkAngleCancelationKey = XB1_XBOX
 			isAutoWalkingAngle = FALSE
 		}
@@ -267,18 +266,21 @@ function setLastUsedAmmoKey() {
 }
 
 function isCancelToggleRT() {
-	if (event_release(XB1_RT)) return XB1_RT
-	if (event_press(XB1_X)) return XB1_X
+	if (EASY_CANCEL && event_release(XB1_RT)) return XB1_RT
+	if (EASY_CANCEL && event_press(XB1_X)) return XB1_X
 	if (event_press(XB1_SHARE)) return XB1_SHARE
 	if (event_press(XB1_UP)) return XB1_UP
-	if (event_press(XB1_A)) return XB1_A
-	if (event_press(XB1_Y)) return XB1_Y
+	if (EASY_CANCEL && event_press(XB1_A)) return XB1_A
+	if (EASY_CANCEL && event_press(XB1_Y)) return XB1_Y
+	
+	if(get_ival(XB1_X) && get_ptime(XB1_X) > 300) return TRUE
+	if(get_ival(XB1_Y) && get_ptime(XB1_Y) > 300) return TRUE
 	
 	return FALSE
 }
 
 function cancelToggleRT() {
-	if (skipCancelToggleRT) {
+	if (EASY_CANCEL && skipCancelToggleRT) {
 		skipCancelToggleRT = FALSE
 		return
 	}
@@ -580,3 +582,4 @@ combo OpenHomeMenu {
 	wait(200)
 	set_val(PRESS_HOME, 0)
 }
+ ����������������
