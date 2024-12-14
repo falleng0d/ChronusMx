@@ -74,7 +74,6 @@ int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
 int autoWalkAngleCancelationKey
 int isToggleRT, pressRTCount, skipCancelToggleRT
 int isHoldingRT
-int lastUsedAmmoKey
 
 // OTHERS
 int doHome
@@ -160,8 +159,6 @@ main {
 		checkChangeClass()
 		checkChangeMode()
 	}
-	
-	setLastUsedAmmoKey()
 	
 	// OLED
 	// clearOled()
@@ -317,14 +314,6 @@ function isRapidDoublePressRT() {
 	}
 	
 	return FALSE
-}
-
-function setLastUsedAmmoKey() {
-	if (event_press(XB1_X)) {
-		lastUsedAmmoKey = XB1_X
-	} else if (event_press(XB1_Y)) {
-		lastUsedAmmoKey = XB1_Y
-	}
 }
 
 function isCancelToggleRT() {
