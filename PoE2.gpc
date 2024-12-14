@@ -70,6 +70,10 @@ const string Classes[] = {"No Class", "Mercenary", "Ranger"}
 int selectedMode
 const string Modes[] = {"No Easy Cancel", "Easy Cancel"}
 
+// RANGER
+int arrowType = XB1_RT
+int prevArrowType = XB1_RT
+
 // ANGLE AUTO WALK
 int angleDegree, isAutoWalkingAngle
 int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
@@ -129,7 +133,7 @@ main {
 	}
 	
 	if (isRanger()) {
-		rapidFireOnDoublePressRT()
+		rapidFireOnDoublePressRTWithArrowType()
 	}
 	
 	if (get_ival(GET_START)) {
@@ -151,6 +155,7 @@ main {
 	// HOME HOTKEY
 	if (event_release(GET_HOME)) {
         if (doHome) {
+			onMenu()
 			combo_run(OpenHomeMenu)
 		} else {
 			doHome = TRUE
@@ -204,7 +209,7 @@ function preventRapidFireCancelationOnScatterShot(scatterShotKey) {
  * Rapidly press XB1_RT twice in quick succession to activate rapid fire mode
  * Press XB1_RT to cancel rapid fire mode (if easy cancel is enabled)
  *
- * @description Mercenary, Ranger
+ * @description Mercenary
  */
 function rapidFireOnDoublePressRT() {
 	if (!isToggleRT) {
@@ -216,9 +221,58 @@ function rapidFireOnDoublePressRT() {
 	if (isToggleRT && !get_ival(XB1_LB) && !isHoldingRT) combo_run(rt)
 }
 
+/**
+ * RAPID FIRE
+ * Rapidly press XB1_RT twice in quick succession to activate rapid fire mode
+ * Press XB1_RT to cancel rapid fire mode (if easy cancel is enabled)
+ * Press XB1_X, XB1_Y, XB1_A, XB1_B to rapid fire the respective arrow type
+ *
+ * @description Ranger
+ */
+function rapidFireOnDoublePressRTWithArrowType() {
+	if (isToggleRT) {
+		// Change arrow type
+		if (event_press(XB1_A)) arrowType = XB1_A
+		else if (event_press(XB1_X)) arrowType = XB1_X
+		// else if (event_press(XB1_B)) arrowType = XB1_B
+		else if (event_press(XB1_Y)) arrowType = XB1_Y
+		else if (event_press(XB1_RT)) arrowType = XB1_RT
+		
+		if (arrowType != prevArrowType) {
+			skipCancelToggleRT = TRUE
+			prevArrowType = arrowType
+		}
+		
+		// Rapid fire
+		if (!isHoldingRT && !get_ival(XB1_LB) && !get_ival(XB1_LT)) {
+			if (arrowType == XB1_RT) combo_run(rt)
+			else if (arrowType == XB1_A) combo_run(rapid_fire_a)
+			else if (arrowType == XB1_X) combo_run(rapid_fire_x)
+			// else if (arrowType == XB1_B) combo_run(rapid_fire_b)
+			else if (arrowType == XB1_Y) combo_run(rapid_fire_y)
+		}
+	}
+	
+	if (!isToggleRT) {
+		isToggleRT = isRapidDoublePressRT()
+		arrowType = XB1_RT
+		prevArrowType = XB1_RT
+	} else if (isCancelToggleRTArrow()) {
+		cancelToggleRT()
+	}
+}
+
 // endregion
 
 // region SCRIPT SPECIFIC
+
+function onMenu() {
+	isToggleRT = FALSE
+	isAutoWalkingAngle = FALSE
+	pressRTCount = 0
+	skipCancelToggleRT = FALSE
+	isHoldingRT = FALSE
+}
 
 function autoWalkAngle() {
 	if(isAutoWalkingAngle) {
@@ -334,6 +388,22 @@ function isCancelToggleRT() {
 	return FALSE
 }
 
+function isCancelToggleRTArrow() {
+	if (event_press(XB1_SHARE)) return XB1_SHARE
+	if (event_press(XB1_UP)) return XB1_UP
+	
+	if (event_press(XB1_A) && isEasyCancel()) return XB1_A
+	if (event_press(XB1_X) && isEasyCancel()) return XB1_X
+	if (event_press(XB1_B) && isEasyCancel()) return XB1_B
+	if (event_press(XB1_Y) && isEasyCancel()) return XB1_Y
+	if (event_release(XB1_RT) && isEasyCancel()) return XB1_RT
+	
+	if(get_ival(XB1_X) && get_ptime(XB1_X) > 300) return TRUE
+	if(get_ival(XB1_Y) && get_ptime(XB1_Y) > 300) return TRUE
+	
+	return FALSE
+}
+
 function cancelToggleRT() {
 	if (skipCancelToggleRT && isEasyCancel()) {
 		skipCancelToggleRT = FALSE
@@ -342,6 +412,10 @@ function cancelToggleRT() {
 	
 	isToggleRT = FALSE
 	combo_stop(rt)
+	combo_stop(rapid_fire_x)
+	combo_stop(rapid_fire_y)
+	combo_stop(rapid_fire_a)
+	combo_stop(rapid_fire_b)
 }
 
 function isMercenary() {
@@ -788,10 +862,32 @@ combo rt {
 	wait(50)
 }
 
+combo rapid_fire_x {
+	set_val(XB1_X, 100)
+	wait(50)
+	set_val(XB1_X, 0)
+	wait(50)
+}
+
+combo rapid_fire_y {
+	set_val(XB1_Y, 100)
+	wait(50)
+	set_val(XB1_Y, 0)
+	wait(50)
+}
+
+combo rapid_fire_b {
+	set_val(XB1_B, 100)
+	wait(50)
+	set_val(XB1_B, 0)
+	wait(50)
+}
+
 combo rapid_fire_a {
 	set_val(XB1_A, 100)
 	wait(50)
 	set_val(XB1_A, 0)
+	wait(50)
 }
 
 combo snipe {
