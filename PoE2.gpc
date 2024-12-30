@@ -64,7 +64,7 @@ int Update, OledClear, stringLength, n, i
 // CLASS
 int classChanged, changedWithStick, modeChanged, modeChangedWithStick
 int selectedClass
-const string Classes[] = {"No Class", "Mercenary", "Ranger"}
+const string Classes[] = {"No Class", "Mercenary", "Ranger", "Witch"}
 int selectedMode
 const string Modes[] = {"No Easy Cancel", "Easy Cancel"}
 
@@ -139,6 +139,10 @@ main {
 		}
 		
 		rapidFireOnDoublePressRTWithArrowType()
+	}
+	
+	if (isWitch()) {
+		rapidFireOnDoublePressRTSpell()
 	}
 	
 	if (get_ival(GET_START)) {
@@ -258,6 +262,31 @@ function rapidFireOnDoublePressRTWithArrowType() {
 		// arrowType = XB1_RT
 		// prevArrowType = XB1_RT
 	} else if (isCancelToggleRTArrow()) {
+		cancelToggleRT()
+	}
+}
+
+function rapidFireOnDoublePressRTSpell() {
+	if (isToggleRT) {
+		// Rapid fire
+		if (!isHoldingRT
+			&& !get_ival(XB1_LB)
+			&& !get_ival(XB1_LT)
+			&& !get_ival(XB1_RB)
+			&& !get_ival(XB1_A)
+			&& !get_ival(XB1_B)
+			&& !get_ival(XB1_X)
+			&& !get_ival(XB1_Y)
+			&& !combo_running(rb)
+			&& !combo_running(y)
+		) {
+			combo_run(rt)
+		}
+	}
+	
+	if (!isToggleRT) {
+		isToggleRT = isRapidDoublePressRT()
+	} else if (isCancelToggleRTSpell()) {
 		cancelToggleRT()
 	}
 }
@@ -406,6 +435,18 @@ function isCancelToggleRTArrow() {
 	return FALSE
 }
 
+function isCancelToggleRTSpell() {
+	if (get_ival(XB1_LT)) return FALSE
+	
+	if (event_press(XB1_SHARE)) return XB1_SHARE
+	if (event_press(XB1_UP)) return XB1_UP
+	
+	if (event_press(GET_START) && isEasyCancel()) return XB1_Y
+	if (event_release(XB1_RT) && isEasyCancel()) return XB1_RT
+	
+	return FALSE
+}
+
 function cancelToggleRT() {
 	if (skipCancelToggleRT && isEasyCancel()) {
 		skipCancelToggleRT = FALSE
@@ -428,12 +469,16 @@ function isRanger() {
 	return selectedClass == 2
 }
 
+function isWitch() {
+	return selectedClass == 3
+}
+
 function isEasyCancel() {
 	return selectedMode == 1
 }
 
 function changeClass(direction) {
-	selectedClass = (selectedClass + direction + 3) % 3
+	selectedClass = (selectedClass + direction + 4) % 4
 	set_pvar(SPVAR_1, selectedClass)
 	scheduleOledUpdate()
 	
