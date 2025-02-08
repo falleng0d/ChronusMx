@@ -80,7 +80,7 @@ int isToggleRT, pressRTCount, skipCancelToggleRT
 int isHoldingRT
 int isToggleLS
 int isMenuOpen
-
+int autoAttackDuration, autoAttackDurationLastRefreshedIn
 // OTHERS
 int doHome
 
@@ -152,6 +152,7 @@ main {
 				event_press(XB1_MENU)
 			) {
 				combo_stop(arrow_up)
+				combo_stop(rb)
 			}
 		}
 		
@@ -160,6 +161,18 @@ main {
 		}
 		
 		rapidFireOnDoublePressRTWithArrowType()
+		
+		if (autoAttackDuration > 5000) {
+			autoAttackDuration = 0
+			combo_run(mana_potion)
+		}
+		
+		autoAttackDurationLastRefreshedIn = autoAttackDurationLastRefreshedIn + get_rtime()
+		
+		if (autoAttackDurationLastRefreshedIn > 4000) {
+			autoAttackDuration = 0
+			autoAttackDurationLastRefreshedIn = 0
+		}
 	}
 	
 	if (isWitch() && !isMenuOpen) {
@@ -312,6 +325,9 @@ function rapidFireOnDoublePressRTWithArrowType() {
 			else if (arrowType == XB1_A) combo_run(rapid_fire_a)
 			else if (arrowType == XB1_X) combo_run(rapid_fire_x)
 			else if (arrowType == XB1_Y) combo_run(rapid_fire_y)
+			
+			autoAttackDuration = autoAttackDuration + get_rtime()
+			autoAttackDurationLastRefreshedIn = 0
 		}
 	}
 	
@@ -456,8 +472,10 @@ function isRapidDoublePressRT() {
 		}
 	}
 	
-	if(get_ival(XB1_RT) == 0 && get_ptime(XB1_RT) > 300) {
+	if(get_ival(XB1_RT) == 0 && get_ptime(XB1_RT) > 300 && pressRTCount > 0) {
 		pressRTCount = 0
+		autoAttackDuration = autoAttackDuration + 450
+		autoAttackDurationLastRefreshedIn = 0
 	}
 	
 	return FALSE
@@ -1068,6 +1086,13 @@ combo arrow_up {
 	set_val(XB1_LB, 0)
 	set_val(XB1_UP, 100)
 	wait(200)
+}
+
+combo mana_potion {
+	set_val(XB1_RIGHT, 100)
+	wait(100)
+	set_val(XB1_RT, 0)
+	wait(50)
 }
 
 combo rapid_fire_x {
