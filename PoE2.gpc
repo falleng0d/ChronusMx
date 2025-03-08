@@ -68,10 +68,6 @@ const string Classes[] = {"No Class", "Mercenary", "Ranger", "Witch"}
 int selectedMode
 const string Modes[] = {"No Easy Cancel", "Easy Cancel"}
 
-// RANGER
-int arrowType = XB1_RT
-int prevArrowType = XB1_RT
-
 // ANGLE AUTO WALK
 int angleDegree, isAutoWalkingAngle
 int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
@@ -83,6 +79,7 @@ int isMenuOpen
 int autoAttackDuration, autoAttackDurationLastRefreshedIn
 // OTHERS
 int doHome
+int skipLB
 
 // LOCAL VARIABLES (for easier code reading)
 int angle_deg // used on rapid_look_around_8_directions_l
@@ -134,12 +131,21 @@ main {
 	}
 	
 	if (isRanger() && !isMenuOpen) {
+		if (get_ival(XB1_LB) && get_ptime(XB1_LB) > 250) skipLB = TRUE
+		
 		if (!get_ival(XB1_LT)) {
 			if (event_press(XB1_RB)) combo_run(rb)
 			if (event_press(XB1_Y)) combo_run(y)
 			if (event_press(XB1_A)) combo_run(a)
-			if (get_ival(XB1_LB)) {
-				combo_run(arrow_up)
+			if (event_release(XB1_LB)) {
+				if (skipLB) {
+					skipLB = FALSE
+				} else {
+					combo_run(arrow_up)
+					isToggleRT = TRUE
+				}
+			} else if (get_ival(XB1_LB) && skipLB) {
+				combo_stop(arrow_up)
 			} else if (
 				event_press(XB1_A) ||
 				event_press(XB1_B) ||
@@ -156,23 +162,29 @@ main {
 			}
 		}
 		
-		if (get_ival(XB1_LT)) {
-			combo_run(rb_fast)
-		}
+		if (get_ival(XB1_LT)) combo_run(rb_fast)
 		
 		rapidFireOnDoublePressRTWithArrowType()
 		
-		if (autoAttackDuration > 5000) {
-			autoAttackDuration = 0
-			combo_run(mana_potion)
-		}
-		
-		autoAttackDurationLastRefreshedIn = autoAttackDurationLastRefreshedIn + get_rtime()
-		
-		if (autoAttackDurationLastRefreshedIn > 4000) {
-			autoAttackDuration = 0
+		// region Auto Mana Potion
+		if (isToggleRT || get_ival(XB1_RT)) {
+			autoAttackDuration = autoAttackDuration + get_rtime()
 			autoAttackDurationLastRefreshedIn = 0
 		}
+		
+		if (autoAttackDuration > 5000) {
+			combo_run(mana_potion)
+			autoAttackDuration = 0
+			autoAttackDurationLastRefreshedIn = 0
+		} else {
+			autoAttackDurationLastRefreshedIn = autoAttackDurationLastRefreshedIn + get_rtime()
+			
+			if (autoAttackDurationLastRefreshedIn > 3500) {
+				autoAttackDuration = 0
+				autoAttackDurationLastRefreshedIn = 0
+			}
+		}
+		// endregion
 	}
 	
 	if (isWitch() && !isMenuOpen) {
@@ -298,17 +310,6 @@ function rapidFireOnDoublePressRT() {
  */
 function rapidFireOnDoublePressRTWithArrowType() {
 	if (isToggleRT) {
-		// Change arrow type
-		if (event_press(XB1_X)) arrowType = XB1_X
-		// else if (event_press(XB1_A)) arrowType = XB1_A
-		// else if (event_press(XB1_Y)) arrowType = XB1_Y
-		// else if (event_press(XB1_RT)) arrowType = XB1_RT
-		
-		if (arrowType != prevArrowType) {
-			skipCancelToggleRT = TRUE
-			prevArrowType = arrowType
-		}
-		
 		// Rapid fire
 		if (!isHoldingRT
 			&& !get_ival(XB1_LB)
@@ -321,20 +322,12 @@ function rapidFireOnDoublePressRTWithArrowType() {
 			&& !combo_running(arrow_up)
 			&& !combo_running(rb_fast)
 		) {
-			if (arrowType == XB1_RT) combo_run(rt)
-			else if (arrowType == XB1_A) combo_run(rapid_fire_a)
-			else if (arrowType == XB1_X) combo_run(rapid_fire_x)
-			else if (arrowType == XB1_Y) combo_run(rapid_fire_y)
-			
-			autoAttackDuration = autoAttackDuration + get_rtime()
-			autoAttackDurationLastRefreshedIn = 0
+			combo_run(rt)
 		}
 	}
 	
 	if (!isToggleRT) {
 		isToggleRT = isRapidDoublePressRT()
-		// arrowType = XB1_RT
-		// prevArrowType = XB1_RT
 	} else if (isCancelToggleRTArrow()) {
 		cancelToggleRT()
 	}
@@ -377,6 +370,7 @@ function onMenu() {
 	isHoldingRT = FALSE
 	isToggleLS = FALSE
 	isMenuOpen = TRUE
+	skipLB = FALSE
 }
 
 function autoWalkAngle() {
@@ -472,7 +466,7 @@ function isRapidDoublePressRT() {
 		}
 	}
 	
-	if(get_ival(XB1_RT) == 0 && get_ptime(XB1_RT) > 300 && pressRTCount > 0) {
+	if(get_ival(XB1_RT) == 0 && get_ptime(XB1_RT) > 200 && pressRTCount > 0) {
 		pressRTCount = 0
 		autoAttackDuration = autoAttackDuration + 450
 		autoAttackDurationLastRefreshedIn = 0
@@ -502,7 +496,7 @@ function isCancelToggleRTArrow() {
 	if (event_press(XB1_UP)) return XB1_UP
 	
 	// if (event_press(XB1_A) && isEasyCancel()) return XB1_A
-	if (event_press(XB1_X) && isEasyCancel()) return XB1_X
+	// if (event_press(XB1_X) && isEasyCancel()) return XB1_X
 	// if (event_press(XB1_Y) && isEasyCancel()) return XB1_Y
 	if (event_press(GET_START) && isEasyCancel()) return XB1_Y
 	if (event_release(XB1_RT) && isEasyCancel()) return XB1_RT
@@ -564,6 +558,7 @@ function changeClass(direction) {
 	isToggleRT = FALSE
 	skipCancelToggleRT = FALSE
 	pressRTCount = 0
+	skipLB = FALSE
 }
 
 function changeMode(direction) {
@@ -1057,11 +1052,10 @@ combo rb {
 }
 
 combo rb_fast {
-	set_val(XB1_Y, 100)
-	wait(200)
+	// set_val(XB1_Y, 100)
+	// wait(200)
 	set_val(XB1_RB, 100)
-	wait(1500)
-	set_val(XB1_RB, 0)
+	wait(150)
 }
 
 combo y {
@@ -1077,14 +1071,18 @@ combo a {
 }
 
 combo arrow_up {
+	set_val(XB1_X, 100)
+	wait(300)
+	set_val(XB1_X, 0)
 	set_val(XB1_LB, 0)
 	set_val(XB1_UP, 100)
-	wait(700)
+	wait(500)
 	set_val(XB1_LB, 100)
 	set_val(XB1_UP, 0)
 	wait(2500)
 	set_val(XB1_LB, 0)
 	set_val(XB1_UP, 100)
+	// set_val(XB1_RIGHT, 100)
 	wait(200)
 }
 
