@@ -68,7 +68,7 @@ main {
 	set_right_triggers_threshold(1, 1)
 
 	// Rapid Look Arroud
-	rapid_look_around_full_l(10)
+	rapid_look_around_full_l(5)
 
 	// Auto Aim (Toggle hold aim button to aim and hold to breathe)
 	toggleAutoAimOnDoublePress(200)
@@ -84,8 +84,8 @@ main {
 
 	// Auto Walk Y
 	if(isAutoWalkingY) {
-		if((walkDirectionY == DIR_FORWARD && isLeftAxisBackward(60))
-			|| (walkDirectionY == DIR_BACKWARD && get_val(XB1_LY) < -60)) {
+		if((walkDirectionY == DIR_FORWARD && isLeftAxisBackward(30))
+			|| (walkDirectionY == DIR_BACKWARD && isLeftAxisForward(30))) {
 			isAutoWalkingY = FALSE
 			isAutoRunning = FALSE
 		} else {
