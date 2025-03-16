@@ -30,6 +30,12 @@ int taps, tapExpire, isAutoAimJustStarted, isAutoAiming, didSnipe
 // AUTO WALK
 int walkDirectionY, isAutoWalkingY, isAutoRunning
 
+// RAPID LOOK AROUND
+int isRapidLookAroundL
+
+// AUTO ACCELERATE
+int isAutoAccelerate, pressRTCount
+
 // PRESS SELECT
 int skipSelectUntilRelease
 
@@ -38,6 +44,10 @@ unmap XB1_XBOX
 
 // PRESS SHARE
 unmap XB1_SHARE
+
+init {
+	isRapidLookAroundL = TRUE
+}
 
 main {
 	set_val(XB1_RX, useDeadzone(XB1_RX, 8))
@@ -52,10 +62,23 @@ main {
 	set_right_triggers_threshold(1, 1)
 
 	// Rapid Look Arroud
-	rapid_look_around_full_l(10)
-
+	rapid_look_around_full_r(10)
+	if (isRapidLookAroundL) rapid_look_around_full_l(10)
+	if (event_press(XB1_DOWN)) isRapidLookAroundL = !isRapidLookAroundL
+	
 	// Auto Aim (Toggle hold aim button to aim and hold to breathe)
 	toggleAutoAimOnDoublePress(200)
+	
+	// Auto Accelerate
+	if (!isAutoAccelerate) {
+		isAutoAccelerate = isRapidDoublePressRT()
+	} else {
+		if (event_press(XB1_RT) || isLeftAxisBackward(60)) {
+			isAutoAccelerate = FALSE
+		} else {
+			set_val(XB1_RT, 100)
+		}
+	}
 
 	// Auto Run
 	if (isAutoWalkingY) {
@@ -111,6 +134,25 @@ main {
 	}
 }
 
+function isRapidDoublePressRT() {
+	if(event_press(XB1_RT)) {
+		if (pressRTCount == 0) {
+			pressRTCount = pressRTCount + 1
+		} else if (get_ptime(XB1_RT) < 200) {
+			pressRTCount = 0
+			return TRUE
+		}
+	}
+	
+	if(get_ival(XB1_RT) == 0 && get_ptime(XB1_RT) > 200 && pressRTCount > 0) {
+		pressRTCount = 0
+	}
+	
+	return FALSE
+}
+
+// region SHARED UTILITIES
+
 function interpolate(val, inMin, inMax, outMin, outMax) {
     if (val <= inMin) return outMin
     if (val >= inMax) return outMax
@@ -143,6 +185,12 @@ function is_analog_outside_circle(x, y, radius) {
 function rapid_look_around_full_l(tolerance) {
 	if (is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), tolerance)) {
 		set_polar(POLAR_LS, 0 - get_polar(POLAR_LS, POLAR_ANGLE), MAX_RADIUS)
+	}
+}
+
+function rapid_look_around_full_r(tolerance) {
+	if (is_analog_outside_circle(get_val(XB1_RX), get_val(XB1_RY), tolerance)) {
+		set_polar(POLAR_RS, 0 - get_polar(POLAR_RS, POLAR_ANGLE), MAX_RADIUS)
 	}
 }
 
@@ -301,6 +349,8 @@ function useDeadzone(bt, deadzone) {
 
 	return 0
 }
+
+// endregion SHARED UTILITIES
 
 // Trigger run forward
 combo l3 {
