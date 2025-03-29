@@ -72,23 +72,19 @@ main {
 	// Auto Accelerate
 	if (!isAutoAccelerate) {
 		isAutoAccelerate = isRapidDoublePressRT()
-	} else {
-		if (event_press(XB1_RT) || isLeftAxisBackward(60)) {
-			isAutoAccelerate = FALSE
-		} else {
-			set_val(XB1_RT, 100)
-		}
+	} else if (event_press(XB1_RT)) {
+		isAutoAccelerate = FALSE
+	} else if (!get_val(XB1_LT)) {
+		set_val(XB1_RT, 100)
 	}
 
 	// Auto Run
-	if (isAutoWalkingY) {
-		if(event_press(GET_SELECT)){
-			combo_run(l3)
-			skipSelectUntilRelease = TRUE
-			isAutoRunning = TRUE
-		}
+	if ((isAutoWalkingY || isAutoAccelerate) && event_press(GET_SELECT)) {
+		combo_run(l3)
+		skipSelectUntilRelease = TRUE
+		isAutoRunning = TRUE
 	}
-
+	
 	// Auto Walk Y
 	if(isAutoWalkingY) {
 		if((walkDirectionY == DIR_FORWARD && isLeftAxisBackward(60))
@@ -126,6 +122,7 @@ main {
 		set_val(PRESS_HOME, 100)
 		isAutoWalkingY = FALSE
 		isAutoRunning = FALSE
+		isAutoAccelerate = FALSE
 	}
 	
 	// SHARE HOTKEY
@@ -364,3 +361,4 @@ combo snipe {
 	set_val(XB1_RS, 100)
 	wait(50)
 }
+
