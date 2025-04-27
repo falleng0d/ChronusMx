@@ -11,6 +11,7 @@ define DIR_RIGHT = 1
 define true = TRUE
 define false = FALSE
 define MAX_RADIUS = 32767
+define DEADZONE = 10
 
 // REMAPS
 define PRESS_START = XB1_A
@@ -35,6 +36,9 @@ int isRapidLookAroundL
 
 // AUTO ACCELERATE
 int isAutoAccelerate, pressRTCount
+
+// MENU
+int isMenuOpen
 
 // PRESS SELECT
 int skipSelectUntilRelease
@@ -99,6 +103,22 @@ main {
 			isAutoWalkingY = TRUE
 			skipSelectUntilRelease = TRUE
 			walkDirectionY = getDirection(XB1_LY)
+		}
+	}
+
+	// Menu OPEN (XB1_L -> Directionals)
+	// Use isLeftAxisForward, isLeftAxisBackward, isLeftAxisLeft, isLeftAxisRight
+	// if (event_press(GET_HOME)) isMenuOpen = !isMenuOpen
+
+	if (isMenuOpen) {
+		if (isLeftAxisForward(DEADZONE)) {
+			set_val(XB1_UP, 100)
+		} else if (isLeftAxisBackward(DEADZONE)) {
+			set_val(XB1_DOWN, 100)
+		} else if (isLeftAxisLeft(DEADZONE)) {
+			set_val(XB1_LEFT, 100)
+		} else if (isLeftAxisRight(DEADZONE)) {
+			set_val(XB1_RIGHT, 100)
 		}
 	}
 
@@ -292,7 +312,7 @@ function toggleAutoAimOnDoublePress(doublePressSpeed) {
 				isAutoAiming = FALSE
 			} else if (get_ival(GET_AUTO_AIM) && get_ptime(GET_AUTO_AIM) > 250 && !didSnipe) {
 				// Snipe Button is held
-				combo_run(snipe)
+				// combo_run(snipe)
 				didSnipe = TRUE
 			}
 			
