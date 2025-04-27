@@ -38,6 +38,9 @@ define DEADZONE_L = 8
 define DEADZONE_R = 5
 define MENU_DEADZONE = 20
 define MAX_RADIUS = 32767
+define AUTO_MANA_POTION_ENABLED = FALSE
+define AUTO_MANA_POTION_USE_ON_ATTACK_DURATION = 5000
+define AUTO_MANA_POTION_RESET_IN = 3500
 
 // ANGLE AUTO WALK RELATED
 define CANCEL_ANGLE = 360
@@ -171,25 +174,9 @@ main {
 		
 		rapidFireOnDoublePressRTWithArrowType()
 		
-		// region Auto Mana Potion
-		if (isToggleRT || get_ival(XB1_RT)) {
-			autoAttackDuration = autoAttackDuration + get_rtime()
-			autoAttackDurationLastRefreshedIn = 0
+		if (AUTO_MANA_POTION_ENABLED) {
+			doAutoManaPotion()
 		}
-		
-		if (autoAttackDuration > 5000) {
-			combo_run(mana_potion)
-			autoAttackDuration = 0
-			autoAttackDurationLastRefreshedIn = 0
-		} else {
-			autoAttackDurationLastRefreshedIn = autoAttackDurationLastRefreshedIn + get_rtime()
-			
-			if (autoAttackDurationLastRefreshedIn > 3500) {
-				autoAttackDuration = 0
-				autoAttackDurationLastRefreshedIn = 0
-			}
-		}
-		// endregion
 	}
 	
 	if (isWitch() && !isMenuOpen) {
@@ -531,6 +518,26 @@ function cancelToggleRT() {
 	combo_stop(rapid_fire_y)
 	combo_stop(rapid_fire_a)
 	combo_stop(rapid_fire_b)
+}
+
+function doAutoManaPotion() {
+	if (isToggleRT || get_ival(XB1_RT)) {
+		autoAttackDuration = autoAttackDuration + get_rtime()
+		autoAttackDurationLastRefreshedIn = 0
+	}
+	
+	if (autoAttackDuration > AUTO_MANA_POTION_USE_ON_ATTACK_DURATION) {
+		combo_run(mana_potion)
+		autoAttackDuration = 0
+		autoAttackDurationLastRefreshedIn = 0
+	} else {
+		autoAttackDurationLastRefreshedIn = autoAttackDurationLastRefreshedIn + get_rtime()
+		
+		if (autoAttackDurationLastRefreshedIn > AUTO_MANA_POTION_RESET_IN) {
+			autoAttackDuration = 0
+			autoAttackDurationLastRefreshedIn = 0
+		}
+	}
 }
 
 function isMercenary() {
