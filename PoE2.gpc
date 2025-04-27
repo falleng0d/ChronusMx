@@ -33,13 +33,15 @@ define DIR_LEFT = -1
 define DIR_RIGHT = 1
 define true = TRUE
 define false = FALSE
-define DEADZONE = 5
+define DEADZONE = 8
+define DEADZONE_L = 8
+define DEADZONE_R = 5
 define MENU_DEADZONE = 20
 define MAX_RADIUS = 32767
 
 // ANGLE AUTO WALK RELATED
 define CANCEL_ANGLE = 360
-define CHANGE_AREA = 20
+define CHANGE_AREA = 10
 define START_AREA = 20
 define IGNORE_AREA = 100
 
@@ -120,8 +122,11 @@ init {
 main {
 	set_left_triggers_threshold(1)
 	set_right_triggers_threshold(1, 1)
-	rapid_look_around_full_r(10)
+	rapid_look_around_full_r(DEADZONE_R)
 
+	applyDeadzone(XB1_RX, DEADZONE_R)
+	applyDeadzone(XB1_RY, DEADZONE_R)
+	
 	autoWalkAngle()
 	
 	if (isMercenary() && !isMenuOpen) {
@@ -443,15 +448,10 @@ function autoWalkAngle() {
 
 		set_polar(POLAR_LS, -angleDegree, MAX_RADIUS)
 	} else {
-		applyDeadzone(XB1_RX, 10)
-		applyDeadzone(XB1_RY, 10)
+		applyDeadzone(XB1_LX, DEADZONE_L)
+		applyDeadzone(XB1_LY, DEADZONE_L)
 
-		if (is_analog_inside_circle(get_val(XB1_RX), get_val(XB1_RY), 10)) {
-			applyDeadzone(XB1_LX, 5)
-			applyDeadzone(XB1_LY, 5)
-
-			rapid_look_around_full_l(10)
-		}
+		rapid_look_around_full_l(DEADZONE_L)
 	}
 }
 
