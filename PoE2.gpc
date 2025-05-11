@@ -1060,10 +1060,9 @@ combo rb {
 }
 
 combo rb_fast {
-	// set_val(XB1_Y, 100)
-	// wait(200)
+	wait(75)
 	set_val(XB1_RB, 100)
-	wait(150)
+	wait(75)
 }
 
 combo y {
