@@ -489,7 +489,7 @@ function isCancelToggleRTArrow() {
 	if (event_release(XB1_RT) && isEasyCancel()) return XB1_RT
 	
 	if(get_ival(XB1_X) && get_ptime(XB1_X) > 300) return TRUE
-	if(get_ival(XB1_Y) && get_ptime(XB1_Y) > 300) return TRUE
+	// if(get_ival(XB1_Y) && get_ptime(XB1_Y) > 300) return TRUE
 	
 	return FALSE
 }
