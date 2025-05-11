@@ -1067,7 +1067,7 @@ combo rb_fast {
 
 combo y {
 	set_val(XB1_Y, 100)
-	wait(1000)
+	wait(750)
 	set_val(XB1_Y, 0)
 	wait(50)
 }
