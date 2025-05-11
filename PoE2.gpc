@@ -395,6 +395,7 @@ function autoWalkAngle() {
 			set_val(TRACE_1, angleDegree)
 			isAutoWalkingAngle = TRUE
 			isIgnoringChanges = TRUE
+			isMenuOpen = FALSE
 		} else if (isAutoWalkingAngle) {
 			if (!isInsideCancelationArea) {
 				// If the new angle is not within X degrees of the previous angle cancel isAutoWalkingAngle
