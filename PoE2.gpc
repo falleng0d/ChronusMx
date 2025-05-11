@@ -171,6 +171,7 @@ main {
 		}
 		
 		if (get_ival(XB1_LT)) combo_run(rb_fast)
+		else combo_stop(rb_fast)
 		
 		rapidFireOnDoublePressRTWithArrowType()
 		
