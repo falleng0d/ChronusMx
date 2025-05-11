@@ -219,7 +219,6 @@ main {
 	}
 	
 	if (event_press(XB1_B)) {
-		if (isMenuOpen) isMenuOpen = FALSE
 		if (isToggleLS) isToggleLS = FALSE
 	}
 	
