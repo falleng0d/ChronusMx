@@ -149,11 +149,12 @@ main {
 				if (skipLB) {
 					skipLB = FALSE
 				} else {
-					combo_run(arrow_up)
+					combo_run(arrow_up_simple)
 					isToggleRT = TRUE
 				}
 			} else if (get_ival(XB1_LB) && skipLB) {
 				combo_stop(arrow_up)
+				combo_stop(arrow_up_simple)
 			} else if (
 				event_press(XB1_A) ||
 				event_press(XB1_B) ||
@@ -166,6 +167,7 @@ main {
 				event_press(XB1_MENU)
 			) {
 				combo_stop(arrow_up)
+				combo_stop(arrow_up_simple)
 				combo_stop(rb)
 			}
 		}
@@ -312,6 +314,7 @@ function rapidFireOnDoublePressRTWithArrowType() {
 			&& !combo_running(y)
 			&& !combo_running(a)
 			&& !combo_running(arrow_up)
+			&& !combo_running(arrow_up_simple)
 			&& !combo_running(rb_fast)
 		) {
 			combo_run(rt)
@@ -1065,6 +1068,7 @@ combo rb_fast {
 	wait(75)
 }
 
+// Voltaic Mark
 combo y {
 	set_val(XB1_Y, 100)
 	wait(750)
@@ -1094,8 +1098,12 @@ combo arrow_up {
 }
 
 combo arrow_up_simple {
+	// Barrage
+	set_val(XB1_X, 100)
+	wait(700)
+	// Lightning Rod
 	set_val(XB1_LB, 100)
-	wait(2500)
+	wait(1250)
 }
 
 combo mana_potion {
