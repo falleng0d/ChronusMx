@@ -77,14 +77,16 @@ const string Modes[] = {"No Easy Cancel", "Easy Cancel"}
 int angleDegree, isAutoWalkingAngle
 int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
 int autoWalkAngleCancelationKey
+
+// OTHERS
 int isToggleRT, pressRTCount, skipCancelToggleRT
 int isHoldingRT
 int isToggleLS
 int isMenuOpen
 int autoAttackDuration, autoAttackDurationLastRefreshedIn
-// OTHERS
 int doHome
 int skipLB
+int skipSelect
 
 // LOCAL VARIABLES (for easier code reading)
 int angle_deg // used on rapid_look_around_8_directions_l
@@ -201,7 +203,7 @@ main {
 		set_val(XB1_A, 100)
 	}
 
-	if (get_ival(GET_SELECT)) {
+	if (get_ival(GET_SELECT) && !skipSelect) {
 		set_val(XB1_B, 100)
 	}
 
@@ -209,6 +211,8 @@ main {
 		isMenuOpen = FALSE
 		isToggleLS = FALSE
 	}
+	
+	if (event_release(XB1_VIEW)) skipSelect = FALSE
 	
 	// region MENU RELATED
 	
@@ -322,6 +326,10 @@ function rapidFireOnDoublePressRTWithArrowType() {
 	}
 	
 	if (!isToggleRT) {
+		// if (isAutoWalkingAngle && event_release(XB1_RT)) {
+		// 	isToggleRT = TRUE
+		// } else {
+		// }
 		isToggleRT = isRapidDoublePressRT()
 	} else if (isCancelToggleRTArrow()) {
 		cancelToggleRT()
@@ -393,20 +401,21 @@ function autoWalkAngle() {
 	// Check if the left joystick has moved past an initial circular radius X
 	if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), START_AREA)) {
 		// Capture the direction and angle of the joystick
-		if(event_press(GET_SELECT)) {
+		if(!isAutoWalkingAngle && event_press(GET_SELECT)) {
 			angleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
-			set_val(TRACE_1, angleDegree)
+			// set_val(TRACE_1, angleDegree)
 			isAutoWalkingAngle = TRUE
 			isIgnoringChanges = TRUE
 			isMenuOpen = FALSE
+			skipSelect = TRUE
 		} else if (isAutoWalkingAngle) {
 			if (!isInsideCancelationArea) {
 				// If the new angle is not within X degrees of the previous angle cancel isAutoWalkingAngle
-				set_val(TRACE_2, angleDegree)
+				// set_val(TRACE_2, angleDegree)
 				newAngleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
-				set_val(TRACE_3, newAngleDegree)
+				// set_val(TRACE_3, newAngleDegree)
 				angleDifference = newAngleDegree - angleDegree
-				set_val(TRACE_4, angleDifference)
+				// set_val(TRACE_4, angleDifference)
 				if(angleDifference <= 180 && abs(angleDifference) <= CANCEL_ANGLE) {
 					isAutoWalkingAngle = TRUE
 				} else if (angleDifference > 180 && abs(360 - angleDifference) <= CANCEL_ANGLE) {
@@ -428,12 +437,12 @@ function autoWalkAngle() {
 		if(isIgnoringChanges) {
 			// wait for the joystick to move back inside the circular radius 30
 			isIgnoringChanges = !is_analog_inside_circle(get_ival(XB1_LX), get_ival(XB1_LY), IGNORE_AREA)
-			set_val(TRACE_5, isIgnoringChanges)
+			// set_val(TRACE_5, isIgnoringChanges)
 		} else {
 			// Check if the left joystick has moved past the circular radius 70 (into the direction change area)
 			if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), CHANGE_AREA)) {
 				angleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
-				set_val(TRACE_1, angleDegree)
+				// set_val(TRACE_1, angleDegree)
 			}
 		}
 
@@ -570,6 +579,7 @@ function changeClass(direction) {
 	skipCancelToggleRT = FALSE
 	pressRTCount = 0
 	skipLB = FALSE
+	isMenuOpen = FALSE
 }
 
 function changeMode(direction) {
@@ -988,7 +998,7 @@ combo rt {
 	set_val(XB1_RT, 100)
 	wait(100)
 	set_val(XB1_RT, 0)
-	wait(70)
+	wait(50)
 }
 
 // Uses auxiliary witch spells
@@ -1082,25 +1092,21 @@ combo a {
 }
 
 combo arrow_up {
+	// Barrage
 	set_val(XB1_X, 100)
-	wait(300)
-	set_val(XB1_X, 0)
-	set_val(XB1_LB, 0)
-	set_val(XB1_UP, 100)
 	wait(500)
+	// Lightning Rod
 	set_val(XB1_LB, 100)
-	set_val(XB1_UP, 0)
-	wait(2500)
-	set_val(XB1_LB, 0)
+	wait(1250)
+	// Orb of Storms
 	set_val(XB1_UP, 100)
-	// set_val(XB1_RIGHT, 100)
-	wait(200)
+	wait(350)
 }
 
 combo arrow_up_simple {
 	// Barrage
 	set_val(XB1_X, 100)
-	wait(700)
+	wait(500)
 	// Lightning Rod
 	set_val(XB1_LB, 100)
 	wait(1250)
