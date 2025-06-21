@@ -79,9 +79,6 @@ remap XB1_PR2 -> XB1_VIEW
 // PRESS SHARE
 unmap XB1_SHARE
 
-unmap XB1_RX
-unmap XB1_RY
-
 init {
 	set_val(TRACE_6, 1)
 }
@@ -177,7 +174,7 @@ main {
 		}
 	}
 
-	rapid_look_around_full(10, get_val(XB1_RX), get_val(XB1_RY), POLAR_RS, POLAR_LS)
+	rapid_look_around_full(10, get_val(XB1_RX), get_val(XB1_RY), POLAR_RS, POLAR_RS)
 	// endregion
 	
 	// Remap XB1_LT -> XB1_Y
