@@ -59,6 +59,7 @@ int autoWalkAngleCancelationKey
 int isSkipStart
 int isSkipSelect
 int isSkipShare
+int isSkipLT
 
 // LOCAL VARIABLES (for easier code reading)
 int angle_deg // used on rapid_look_around_8_directions_l
@@ -177,21 +178,25 @@ main {
 	rapid_look_around_full(10, get_val(XB1_RX), get_val(XB1_RY), POLAR_RS, POLAR_RS)
 	// endregion
 	
-	// Remap XB1_LT -> XB1_Y
-	swap(XB1_LT, XB1_Y)
+	// region Remap XB1_LT -> XB1_Y
+	set_val(XB1_LT, 0)
 	
 	// Press XB1_LT if hold XB1_LT for 400ms
 	if (get_ival(XB1_LT) > 0 && get_ptime(XB1_LT) > 400) {
-		set_val(XB1_LT, 100)
+		combo_run(press_lt)
+		isSkipLT = TRUE
+	} else if (event_release(XB1_LT)) {
+		if (isSkipLT) {
+			isSkipLT = FALSE
+		} else {
+			combo_run(press_y)
+		}
 	}
+	// endregion
 	
-	// Remap XB1_RT -> XB1_X
+	// region Remap XB1_RT -> XB1_X
 	swap(XB1_RT, XB1_X)
-	
-	// Press XB1_RT if hold XB1_RT for 400ms
-	if (get_ival(XB1_RT) > 0 && get_ptime(XB1_RT) > 400) {
-		combo_run(press_rt)
-	}
+	// endregion
 
 	if (get_ival(GET_START)) {
 		if (get_ptime(GET_START) > 400) {
@@ -460,4 +465,16 @@ combo press_rt {
 	set_val(XB1_RT, 100)
 	wait(200)
 	set_val(XB1_RT, 0)
+}
+
+combo press_lt {
+	set_val(XB1_LT, 100)
+	wait(200)
+	set_val(XB1_LT, 0)
+}
+
+combo press_y {
+	set_val(XB1_Y, 100)
+	wait(200)
+	set_val(XB1_Y, 0)
 }
