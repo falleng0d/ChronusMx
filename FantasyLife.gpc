@@ -55,6 +55,12 @@ int angleDegree, isAutoWalkingAngle
 int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
 int autoWalkAngleCancelationKey
 
+// AUTO RUN
+int isAutoRunning
+
+// AUTO ATTACK
+int isHoldingRT, isToggleRT, pressRTCount, skipCancelToggleRT
+
 // OTHERS
 int isSkipStart
 int isSkipSelect
@@ -96,10 +102,6 @@ main {
 		if (event_press(GET_HOME)) {
 			autoWalkAngleCancelationKey = GET_HOME
 			isAutoWalkingAngle = FALSE
-		} else if (event_press(GET_SELECT)) {
-			autoWalkAngleCancelationKey = GET_SELECT
-			isAutoWalkingAngle = FALSE
-			isSkipSelect = TRUE
 		} else if (event_press(XB1_SHARE)) {
 			autoWalkAngleCancelationKey = XB1_SHARE
 			isAutoWalkingAngle = FALSE
@@ -118,12 +120,14 @@ main {
 	// Check if the left joystick has moved past an initial circular radius X
 	if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), START_AREA)) {
 		// Capture the direction and angle of the joystick
-		if(event_press(GET_SELECT)) {
+		if(event_press(GET_SELECT) && !isAutoWalkingAngle) {
 			angleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
 			set_val(TRACE_1, angleDegree)
 			isSkipSelect = TRUE
 			isAutoWalkingAngle = TRUE
 			isIgnoringChanges = TRUE
+		} else if (event_press(GET_SELECT) && isAutoWalkingAngle) {
+			isAutoRunning = TRUE
 		} else if (isAutoWalkingAngle) {
 			if (!isInsideCancelationArea) {
 				// If the new angle is not within X degrees of the previous angle cancel isAutoWalkingAngle
@@ -145,6 +149,11 @@ main {
 			isInsideCancelationArea = TRUE
 		}
 	} else {
+		if (event_press(GET_SELECT)) {
+			isAutoWalkingAngle = FALSE
+			isSkipSelect = TRUE
+		}
+		
 		isInsideCancelationArea = FALSE
 	}
 
@@ -177,6 +186,18 @@ main {
 
 	rapid_look_around_full(10, get_val(XB1_RX), get_val(XB1_RY), POLAR_RS, POLAR_RS)
 	// endregion
+	
+	// region AUTO RUN
+	
+	if (isAutoWalkingAngle && isAutoRunning) {
+		set_val(XB1_X, 100)
+	} else {
+		isAutoRunning = FALSE
+	}
+	
+	// endregion
+	
+	rapidFireOnDoublePressRT()
 	
 	// region Remap XB1_LT -> XB1_Y
 	set_val(XB1_LT, 0)
@@ -224,6 +245,61 @@ main {
 		isSkipShare = FALSE
 	}
 }
+
+// region SCRIPT SPECIFIC
+
+/**
+ * RAPID FIRE
+ * Rapidly press XB1_RT twice in quick succession to activate rapid fire mode
+ * Press XB1_RT to cancel rapid fire mode (if easy cancel is enabled)
+ */
+function rapidFireOnDoublePressRT() {
+	if (!isToggleRT) {
+		isToggleRT = isRapidDoublePressRT()
+	} else if (isCancelToggleRT()) {
+		cancelToggleRT()
+	}
+	
+	if (isToggleRT && !isHoldingRT) combo_run(rt)
+}
+
+function isCancelToggleRT() {
+	if (event_release(XB1_RT)) return XB1_RT
+	if (event_press(XB1_X)) return XB1_X
+	if (event_press(XB1_SHARE)) return XB1_SHARE
+	
+	return FALSE
+}
+
+function cancelToggleRT() {
+	if (skipCancelToggleRT) {
+		skipCancelToggleRT = FALSE
+		return
+	}
+	
+	isToggleRT = FALSE
+	combo_stop(rt)
+}
+
+function isRapidDoublePressRT() {
+	if(event_press(XB1_RT)) {
+		if (pressRTCount == 0) {
+			pressRTCount = pressRTCount + 1
+		} else if (get_ptime(XB1_RT) < 200) {
+			pressRTCount = 0
+			skipCancelToggleRT = TRUE
+			return TRUE
+		}
+	}
+	
+	if(get_ival(XB1_RT) == 0 && get_ptime(XB1_RT) > 200 && pressRTCount > 0) {
+		pressRTCount = 0
+	}
+	
+	return FALSE
+}
+
+// endregion
 
 function get_radius(x, y) {
 	return isqrt(x * x + y * y)
@@ -477,4 +553,11 @@ combo press_y {
 	set_val(XB1_Y, 100)
 	wait(200)
 	set_val(XB1_Y, 0)
+}
+
+combo rt {
+	set_val(XB1_X, 100)
+	wait(75)
+	set_val(XB1_X, 0)
+	wait(50)
 }
