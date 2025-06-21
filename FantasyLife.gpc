@@ -204,7 +204,7 @@ main {
 	set_val(XB1_LT, 0)
 	
 	// Press XB1_LT if hold XB1_LT for 400ms
-	if (get_ival(XB1_LT) > 0 && get_ptime(XB1_LT) > 400) {
+	if (get_ival(XB1_LT) > 0 && get_ptime(XB1_LT) > 400 && !isSkipLT) {
 		combo_run(press_lt)
 		isSkipLT = TRUE
 	} else if (event_release(XB1_LT)) {
