@@ -179,6 +179,14 @@ main {
 	}
 
 	rapid_look_around_full(10, get_val(XB1_RX), get_val(XB1_RY), POLAR_RS, POLAR_LS)
+	
+	// Remap XB1_RT -> XB1_X
+	swap(XB1_RT, XB1_X)
+	
+	// Press XB1_RT if hold XB1_RT for 400ms
+	if (get_ival(XB1_RT) > 0 && get_ptime(XB1_RT) > 400) {
+		combo_run(press_rt)
+	}
 
 	if (get_ival(GET_START)) {
 		if (get_ptime(GET_START) > 400) {
@@ -441,4 +449,10 @@ combo OpenHomeMenu {
 	set_val(PRESS_HOME, 100)
 	wait(200)
 	set_val(PRESS_HOME, 0)
+}
+
+combo press_rt {
+	set_val(XB1_RT, 100)
+	wait(200)
+	set_val(XB1_RT, 0)
 }
