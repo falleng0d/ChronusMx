@@ -98,9 +98,6 @@ main {
 		if (event_press(GET_HOME)) {
 			autoWalkAngleCancelationKey = GET_HOME
 			isAutoWalkingAngle = FALSE
-		} else if (event_press(XB1_RT)) {
-			autoWalkAngleCancelationKey = XB1_RT
-			isAutoWalkingAngle = FALSE
 		} else if (event_press(GET_SELECT)) {
 			autoWalkAngleCancelationKey = GET_SELECT
 			isAutoWalkingAngle = FALSE
@@ -126,6 +123,7 @@ main {
 		if(event_press(GET_SELECT)) {
 			angleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
 			set_val(TRACE_1, angleDegree)
+			isSkipSelect = TRUE
 			isAutoWalkingAngle = TRUE
 			isIgnoringChanges = TRUE
 		} else if (isAutoWalkingAngle) {
@@ -181,6 +179,14 @@ main {
 
 	rapid_look_around_full(10, get_val(XB1_RX), get_val(XB1_RY), POLAR_RS, POLAR_LS)
 	// endregion
+	
+	// Remap XB1_LT -> XB1_Y
+	swap(XB1_LT, XB1_Y)
+	
+	// Press XB1_LT if hold XB1_LT for 400ms
+	if (get_ival(XB1_LT) > 0 && get_ptime(XB1_LT) > 400) {
+		set_val(XB1_LT, 100)
+	}
 	
 	// Remap XB1_RT -> XB1_X
 	swap(XB1_RT, XB1_X)
