@@ -66,6 +66,8 @@ int isSkipStart
 int isSkipSelect
 int isSkipShare
 int isSkipLT
+int isHoldingY
+int isHoldingYOnRelease
 
 // LOCAL VARIABLES (for easier code reading)
 int angle_deg // used on rapid_look_around_8_directions_l
@@ -218,6 +220,35 @@ main {
 	
 	// region Remap XB1_RT -> XB1_X
 	swap(XB1_RT, XB1_X)
+	// endregion
+	
+	// region Hold Y on Press Y for 400ms
+	if (event_release(XB1_Y)) {
+		if (isHoldingYOnRelease) {
+			isHoldingYOnRelease = FALSE
+			isHoldingY = TRUE
+		}
+	}
+	
+	if (get_ival(XB1_Y) > 0 && !isHoldingY) {
+		if (get_ptime(XB1_Y) > 250 && get_ptime(XB1_Y) < 600) {
+			isHoldingYOnRelease = TRUE
+		} else if (get_ptime(XB1_Y) > 600) {
+			isHoldingYOnRelease = FALSE
+		}
+	} else if (isHoldingY) {
+		if (event_press(XB1_B) || get_ival(XB1_B)) {
+			isHoldingY = FALSE
+			combo_run(b_finish)
+		} else if (event_press(XB1_Y)
+			|| event_press(XB1_A) || get_ival(XB1_A)
+			|| abs(get_val(XB1_LY)) > 20 || abs(get_val(XB1_LX)) > 20
+		) {
+			isHoldingY = FALSE
+		} else {
+			combo_run(press_y)
+		}
+	}
 	// endregion
 
 	if (get_ival(GET_START)) {
@@ -566,8 +597,9 @@ combo press_lt {
 
 combo press_y {
 	set_val(XB1_Y, 100)
-	wait(200)
+	wait(75)
 	set_val(XB1_Y, 0)
+	wait(200)
 }
 
 combo rt {
@@ -575,4 +607,14 @@ combo rt {
 	wait(75)
 	set_val(XB1_X, 0)
 	wait(50)
+}
+
+combo hold_y {
+	set_val(XB1_Y, 100)
+	wait(1000)
+}
+
+combo b_finish {
+	set_val(XB1_B, 100)
+	wait(1500)
 }
