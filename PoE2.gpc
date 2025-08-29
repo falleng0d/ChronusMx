@@ -79,8 +79,8 @@ int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
 int autoWalkAngleCancelationKey
 
 // OTHERS
-int isToggleRT, pressRTCount, skipCancelToggleRT
 int isHoldingRT
+int isToggleRT, pressRTCount, skipCancelToggleRT
 int isToggleLS
 int isMenuOpen
 int autoAttackDuration, autoAttackDurationLastRefreshedIn
