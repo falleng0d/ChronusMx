@@ -45,6 +45,8 @@ remap XB1_PR2 -> XB1_VIEW
 // remap XB1_B -> XB1_A
 // remap XB1_A -> XB1_B
 
+// unmap XB1_LT
+
 // PRESS SHARE
 unmap XB1_SHARE
 
@@ -61,6 +63,7 @@ main {
     set_right_triggers_threshold(1, 1)
 	
 	if(get_val(XB1_SHARE)) set_val(XB1_RS, 100)
+	// if(get_val(XB1_LT)) set_val(XB1_B, 100)
 
 	// Rapid Look Arroud
 	rapid_look_around_full_l(10)
