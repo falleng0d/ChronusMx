@@ -38,8 +38,9 @@ define DEADZONE_L = 8
 define DEADZONE_R = 5
 define MENU_DEADZONE = 20
 define MAX_RADIUS = 32767
-define AUTO_MANA_POTION_ENABLED = FALSE
-define AUTO_MANA_POTION_USE_ON_ATTACK_DURATION = 5000
+define AUTO_MANA_POTION_ENABLED = TRUE
+define AUTO_MANA_POTION_USE_ON_ATTACK_DURATION = 7000
+define AUTO_MANA_POTION_USE_SINGLE_ATTACK_DURATION = 400
 define AUTO_MANA_POTION_RESET_IN = 3500
 
 // ANGLE AUTO WALK RELATED
@@ -468,7 +469,7 @@ function isRapidDoublePressRT() {
 	
 	if(get_ival(XB1_RT) == 0 && get_ptime(XB1_RT) > 200 && pressRTCount > 0) {
 		pressRTCount = 0
-		autoAttackDuration = autoAttackDuration + 450
+		autoAttackDuration = autoAttackDuration + AUTO_MANA_POTION_USE_SINGLE_ATTACK_DURATION
 		autoAttackDurationLastRefreshedIn = 0
 	}
 	
@@ -1100,16 +1101,28 @@ combo arrow_up {
 	wait(1250)
 	// Orb of Storms
 	set_val(XB1_UP, 100)
-	wait(350)
+	wait(550)
 }
 
 combo arrow_up_simple {
+	// Exposuree
+	// set_val(XB1_Y, 100)
+	// wait(450)
 	// Barrage
-	set_val(XB1_X, 100)
-	wait(500)
+	// set_val(XB1_X, 100)
+	// wait(450)
 	// Lightning Rod
 	set_val(XB1_LB, 100)
-	wait(1250)
+	wait(1450)
+	// Eletrocute
+	set_val(XB1_X, 100)
+	wait(350)
+	// Poison Arrow
+	// set_val(XB1_Y, 100)
+	// wait(850)
+	// Ashen Staff
+	set_val(XB1_RB, 100)
+	wait(850)
 }
 
 combo mana_potion {
