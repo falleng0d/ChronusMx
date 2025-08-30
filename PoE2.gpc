@@ -74,6 +74,10 @@ const string Classes[] = {"No Class", "Mercenary", "Ranger", "Witch"}
 int selectedMode
 const string Modes[] = {"No Easy Cancel", "Easy Cancel"}
 
+// RANGER
+int arrowType = XB1_RT
+int prevArrowType = XB1_RT
+
 // ANGLE AUTO WALK
 int angleDegree, isAutoWalkingAngle
 int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
@@ -309,6 +313,19 @@ function rapidFireOnDoublePressRT() {
  */
 function rapidFireOnDoublePressRTWithArrowType() {
 	if (isToggleRT) {
+		// Change arrow type
+		if (event_press(XB1_RT)) arrowType = XB1_RT
+		// if (event_press(XB1_LT)) arrowType = XB1_LT
+		// else if (event_press(XB1_X)) arrowType = XB1_X
+		// else if (event_press(XB1_Y)) arrowType = XB1_Y
+		
+		if (arrowType != prevArrowType) {
+			skipCancelToggleRT = TRUE
+			prevArrowType = arrowType
+			
+			combo_stop(rt)
+			combo_stop(lt)
+		}
 		// Rapid fire
 		if (!isHoldingRT
 			&& !get_ival(XB1_LB)
@@ -322,7 +339,8 @@ function rapidFireOnDoublePressRTWithArrowType() {
 			&& !combo_running(arrow_up_simple)
 			&& !combo_running(rb_fast)
 		) {
-			combo_run(rt)
+			if (arrowType == XB1_RT) combo_run(rt)
+			else if (arrowType == XB1_LT) combo_run(lt)
 		}
 	}
 	
@@ -332,6 +350,8 @@ function rapidFireOnDoublePressRTWithArrowType() {
 		// } else {
 		// }
 		isToggleRT = isRapidDoublePressRT()
+		arrowType = XB1_RT
+		prevArrowType = XB1_RT
 	} else if (isCancelToggleRTArrow()) {
 		cancelToggleRT()
 	}
@@ -528,6 +548,7 @@ function cancelToggleRT() {
 	
 	isToggleRT = FALSE
 	combo_stop(rt)
+	combo_stop(lt)
 	combo_stop(rapid_fire_x)
 	combo_stop(rapid_fire_y)
 	combo_stop(rapid_fire_a)
@@ -1002,6 +1023,18 @@ combo rt {
 	wait(50)
 }
 
+combo lt {
+	set_val(XB1_LT, 100); wait(100)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+}
+
 // Uses auxiliary witch spells
 combo aux_witch_spells_1 {
 	set_val(XB1_Y, 100)
@@ -1113,16 +1146,16 @@ combo arrow_up_simple {
 	// wait(450)
 	// Lightning Rod
 	set_val(XB1_LB, 100)
-	wait(1450)
-	// Eletrocute
-	set_val(XB1_X, 100)
 	wait(350)
+	// Eletrocute
+	// set_val(XB1_X, 100)
+	// wait(350)
 	// Poison Arrow
 	// set_val(XB1_Y, 100)
 	// wait(850)
 	// Ashen Staff
-	set_val(XB1_RB, 100)
-	wait(850)
+	// set_val(XB1_RB, 100)
+	// wait(850)
 }
 
 combo mana_potion {
