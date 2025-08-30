@@ -1108,18 +1108,23 @@ combo arrow_up_simple {
 	// Exposuree
 	// set_val(XB1_Y, 100)
 	// wait(450)
+	
 	// Barrage
 	// set_val(XB1_X, 100)
 	// wait(450)
+	
 	// Lightning Rod
 	set_val(XB1_LB, 100)
 	wait(1450)
+	
 	// Eletrocute
 	set_val(XB1_X, 100)
 	wait(350)
+	
 	// Poison Arrow
 	// set_val(XB1_Y, 100)
 	// wait(850)
+	
 	// Ashen Staff
 	set_val(XB1_RB, 100)
 	wait(850)
