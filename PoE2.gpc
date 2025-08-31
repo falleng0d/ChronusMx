@@ -74,6 +74,10 @@ const string Classes[] = {"No Class", "Mercenary", "Ranger", "Witch"}
 int selectedMode
 const string Modes[] = {"No Easy Cancel", "Easy Cancel"}
 
+// RANGER
+int arrowType = XB1_RT
+int prevArrowType = XB1_RT
+
 // ANGLE AUTO WALK
 int angleDegree, isAutoWalkingAngle
 int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
@@ -88,6 +92,7 @@ int autoAttackDuration, autoAttackDurationLastRefreshedIn
 int doHome
 int skipLB
 int skipSelect
+int isRunning
 
 // LOCAL VARIABLES (for easier code reading)
 int angle_deg // used on rapid_look_around_8_directions_l
@@ -132,6 +137,14 @@ main {
 
 	applyDeadzone(XB1_RX, DEADZONE_R)
 	applyDeadzone(XB1_RY, DEADZONE_R)
+	
+	// Stop running
+	if (event_press(XB1_B) && isRunning) {
+		combo_stop(run)
+		combo_run(stop_run)
+		isAutoWalkingAngle = FALSE
+		isRunning = FALSE
+	}
 	
 	autoWalkAngle()
 	
@@ -204,13 +217,13 @@ main {
 		set_val(XB1_A, 100)
 	}
 
-	if (get_ival(GET_SELECT) && !skipSelect) {
-		set_val(XB1_B, 100)
-	}
+	onSelect()
 
 	if(get_ival(XB1_SHARE)) {
 		isMenuOpen = FALSE
 		isToggleLS = FALSE
+		
+		combo_stop_all()
 	}
 	
 	if (event_release(XB1_VIEW)) skipSelect = FALSE
@@ -232,6 +245,7 @@ main {
 	if (event_release(GET_HOME)) {
         if (doHome) {
 			onMenu()
+	        combo_stop_all()
 			combo_run(OpenHomeMenu)
 		} else {
 			doHome = TRUE
@@ -309,6 +323,19 @@ function rapidFireOnDoublePressRT() {
  */
 function rapidFireOnDoublePressRTWithArrowType() {
 	if (isToggleRT) {
+		// Change arrow type
+		if (event_press(XB1_RT)) arrowType = XB1_RT
+		// if (event_press(XB1_LT)) arrowType = XB1_LT
+		// else if (event_press(XB1_X)) arrowType = XB1_X
+		// else if (event_press(XB1_Y)) arrowType = XB1_Y
+		
+		if (arrowType != prevArrowType) {
+			skipCancelToggleRT = TRUE
+			prevArrowType = arrowType
+			
+			combo_stop(rt)
+			combo_stop(lt)
+		}
 		// Rapid fire
 		if (!isHoldingRT
 			&& !get_ival(XB1_LB)
@@ -322,7 +349,8 @@ function rapidFireOnDoublePressRTWithArrowType() {
 			&& !combo_running(arrow_up_simple)
 			&& !combo_running(rb_fast)
 		) {
-			combo_run(rt)
+			if (arrowType == XB1_RT) combo_run(rt)
+			else if (arrowType == XB1_LT) combo_run(lt)
 		}
 	}
 	
@@ -332,6 +360,8 @@ function rapidFireOnDoublePressRTWithArrowType() {
 		// } else {
 		// }
 		isToggleRT = isRapidDoublePressRT()
+		arrowType = XB1_RT
+		prevArrowType = XB1_RT
 	} else if (isCancelToggleRTArrow()) {
 		cancelToggleRT()
 	}
@@ -366,6 +396,39 @@ function rapidFireOnDoublePressRTSpell() {
 
 // region SCRIPT SPECIFIC
 
+function startRunning() {
+	isRunning = TRUE
+	isAutoWalkingAngle = TRUE
+	isIgnoringChanges = FALSE
+	isToggleRT = FALSE
+	
+	combo_stop_all()
+	
+	if (combo_running(run)) combo_restart(run)
+	else combo_run(run)
+}
+
+function onSelect() {
+	if (event_release(GET_SELECT)) {
+		skipSelect = FALSE
+	}
+	
+	if (!get_ival(GET_SELECT)) {
+		return
+	}
+	
+	if (isMenuOpen) {
+		set_val(XB1_B, 100)
+		return
+	}
+	
+	if (isAutoWalkingAngle || (!skipSelect && get_ptime(GET_SELECT) < 400)) {
+		return
+	}
+	
+	startRunning()
+}
+
 function onMenu() {
 	isToggleRT = FALSE
 	isAutoWalkingAngle = FALSE
@@ -375,6 +438,7 @@ function onMenu() {
 	isToggleLS = FALSE
 	isMenuOpen = TRUE
 	skipLB = FALSE
+	isRunning = FALSE
 }
 
 function autoWalkAngle() {
@@ -382,12 +446,15 @@ function autoWalkAngle() {
 		if (event_press(GET_HOME)) {
 			autoWalkAngleCancelationKey = GET_HOME
 			isAutoWalkingAngle = FALSE
+			isRunning = FALSE
 		} else if (event_press(XB1_SHARE)) {
 			autoWalkAngleCancelationKey = XB1_SHARE
 			isAutoWalkingAngle = FALSE
+			isRunning = FALSE
 		} else if (event_press(XB1_XBOX)) {
 			autoWalkAngleCancelationKey = XB1_XBOX
 			isAutoWalkingAngle = FALSE
+			isRunning = FALSE
 		}
 	}
 
@@ -428,6 +495,10 @@ function autoWalkAngle() {
 			}
 
 			isInsideCancelationArea = TRUE
+			
+			if (event_press(GET_SELECT)) {
+				startRunning()
+			}
 		}
 	} else {
 		isInsideCancelationArea = FALSE
@@ -527,11 +598,7 @@ function cancelToggleRT() {
 	}
 	
 	isToggleRT = FALSE
-	combo_stop(rt)
-	combo_stop(rapid_fire_x)
-	combo_stop(rapid_fire_y)
-	combo_stop(rapid_fire_a)
-	combo_stop(rapid_fire_b)
+	combo_stop_all()
 }
 
 function doAutoManaPotion() {
@@ -1002,6 +1069,18 @@ combo rt {
 	wait(50)
 }
 
+combo lt {
+	set_val(XB1_LT, 100); wait(100)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+}
+
 // Uses auxiliary witch spells
 combo aux_witch_spells_1 {
 	set_val(XB1_Y, 100)
@@ -1135,6 +1214,24 @@ combo mana_potion {
 	wait(100)
 	set_val(XB1_RT, 0)
 	wait(50)
+}
+
+combo run {
+	set_val(XB1_B, 0)
+	set_val(XB1_LX, 0)
+	set_val(XB1_LY, 0)
+	wait(75)
+	set_val(XB1_B, 100)
+	wait(1000)
+	set_val(XB1_B, 0)
+}
+
+combo stop_run {
+	set_val(XB1_B, 0)
+	set_val(XB1_LX, 0)
+	set_val(XB1_LY, 0)
+	wait(75)
+	set_val(XB1_B, 100)
 }
 
 combo rapid_fire_x {
