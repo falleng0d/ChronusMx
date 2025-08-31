@@ -38,8 +38,8 @@ define DEADZONE_L = 8
 define DEADZONE_R = 5
 define MENU_DEADZONE = 20
 define MAX_RADIUS = 32767
-define AUTO_MANA_POTION_ENABLED = TRUE
-define AUTO_MANA_POTION_USE_ON_ATTACK_DURATION = 7000
+define AUTO_MANA_POTION_ENABLED = FALSE
+define AUTO_MANA_POTION_USE_ON_ATTACK_DURATION = 9000
 define AUTO_MANA_POTION_USE_SINGLE_ATTACK_DURATION = 400
 define AUTO_MANA_POTION_RESET_IN = 3500
 
@@ -166,7 +166,6 @@ main {
 					skipLB = FALSE
 				} else {
 					combo_run(arrow_up_simple)
-					isToggleRT = TRUE
 				}
 			} else if (get_ival(XB1_LB) && skipLB) {
 				combo_stop(arrow_up)
@@ -325,23 +324,22 @@ function rapidFireOnDoublePressRTWithArrowType() {
 	if (isToggleRT) {
 		// Change arrow type
 		if (event_press(XB1_RT)) arrowType = XB1_RT
-		// if (event_press(XB1_LT)) arrowType = XB1_LT
-		// else if (event_press(XB1_X)) arrowType = XB1_X
-		// else if (event_press(XB1_Y)) arrowType = XB1_Y
+		else if (event_press(XB1_RB)) arrowType = XB1_RB
 		
 		if (arrowType != prevArrowType) {
 			skipCancelToggleRT = TRUE
 			prevArrowType = arrowType
 			
-			combo_stop(rt)
-			combo_stop(lt)
+			combo_stop_all()
 		}
+		
 		// Rapid fire
 		if (!isHoldingRT
 			&& !get_ival(XB1_LB)
 			&& !get_ival(XB1_LT)
-			&& !get_ival(XB1_RB)
+			// && !get_ival(XB1_RB)
 			&& !get_ival(XB1_Y)
+			&& !get_ival(XB1_X)
 			&& !combo_running(rb)
 			&& !combo_running(y)
 			&& !combo_running(a)
@@ -349,21 +347,24 @@ function rapidFireOnDoublePressRTWithArrowType() {
 			&& !combo_running(arrow_up_simple)
 			&& !combo_running(rb_fast)
 		) {
-			if (arrowType == XB1_RT) combo_run(rt)
+			if (arrowType == XB1_RT) {
+				combo_run(rt)
+				combo_run(rt_aux)
+			}
 			else if (arrowType == XB1_LT) combo_run(lt)
+			else if (arrowType == XB1_RB) combo_run(rb)
+		}
+		
+		if (isCancelToggleRTArrow()) {
+			cancelToggleRT()
+			return
 		}
 	}
 	
 	if (!isToggleRT) {
-		// if (isAutoWalkingAngle && event_release(XB1_RT)) {
-		// 	isToggleRT = TRUE
-		// } else {
-		// }
 		isToggleRT = isRapidDoublePressRT()
 		arrowType = XB1_RT
 		prevArrowType = XB1_RT
-	} else if (isCancelToggleRTArrow()) {
-		cancelToggleRT()
 	}
 }
 
@@ -567,14 +568,11 @@ function isCancelToggleRTArrow() {
 	if (event_press(XB1_SHARE)) return XB1_SHARE
 	if (event_press(XB1_UP)) return XB1_UP
 	
-	// if (event_press(XB1_A) && isEasyCancel()) return XB1_A
-	// if (event_press(XB1_X) && isEasyCancel()) return XB1_X
-	// if (event_press(XB1_Y) && isEasyCancel()) return XB1_Y
 	if (event_press(GET_START) && isEasyCancel()) return XB1_Y
 	if (event_release(XB1_RT) && isEasyCancel()) return XB1_RT
+	if (arrowType != XB1_RT && event_press(arrowType)) return TRUE
 	
 	if(get_ival(XB1_X) && get_ptime(XB1_X) > 300) return TRUE
-	// if(get_ival(XB1_Y) && get_ptime(XB1_Y) > 300) return TRUE
 	
 	return FALSE
 }
@@ -1063,10 +1061,11 @@ combo hold_rt {
 }
 
 combo rt {
-	set_val(XB1_RT, 100)
-	wait(100)
-	set_val(XB1_RT, 0)
-	wait(50)
+	set_val(XB1_RT, 100); wait(100); set_val(XB1_RT, 0); wait(75);
+}
+
+combo rt_aux {
+	set_val(XB1_X, 100); wait(200); set_val(XB1_X, 0); wait(100);
 }
 
 combo lt {
