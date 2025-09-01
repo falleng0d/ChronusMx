@@ -158,7 +158,7 @@ main {
 		if (get_ival(XB1_LB) && get_ptime(XB1_LB) > 250) skipLB = TRUE
 		
 		if (!get_ival(XB1_LT)) {
-			if (event_press(XB1_RB)) combo_run(rb)
+			//if (event_press(XB1_RB)) combo_run(rb)
 			if (event_press(XB1_Y)) combo_run(y)
 			if (event_press(XB1_A)) combo_run(a)
 			if (event_release(XB1_LB)) {
@@ -1145,10 +1145,7 @@ combo aux_witch_spells_4 {
 }
 
 combo rb {
-	set_val(XB1_RB, 100)
-	wait(1000)
-	set_val(XB1_RB, 0)
-	wait(50)
+	set_val(XB1_RB, 100); wait(100); set_val(XB1_RB, 0); wait(75);
 }
 
 combo rb_fast {
@@ -1160,7 +1157,7 @@ combo rb_fast {
 // Voltaic Mark
 combo y {
 	set_val(XB1_Y, 100)
-	wait(750)
+	wait(150)
 	set_val(XB1_Y, 0)
 	wait(50)
 }
@@ -1191,7 +1188,7 @@ combo arrow_up_simple {
 	// wait(450)
 	// Lightning Rod
 	set_val(XB1_LB, 100)
-	wait(350)
+	wait(75)
 	// Eletrocute
 	// set_val(XB1_X, 100)
 	// wait(350)
