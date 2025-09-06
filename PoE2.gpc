@@ -139,12 +139,26 @@ main {
 	applyDeadzone(XB1_RY, DEADZONE_R)
 	
 	// Stop running
-	if (event_press(XB1_B) && isRunning) {
-		combo_stop(run)
-		combo_run(stop_run)
-		isAutoWalkingAngle = FALSE
-		isRunning = FALSE
+	if (isRunning) {
+		if (event_press(XB1_B)) {
+			combo_stop(run)
+			combo_run(stop_run)
+			isAutoWalkingAngle = FALSE
+			isRunning = FALSE
+		} else if (event_press(XB1_RT)) {
+			combo_stop(run)
+			isAutoWalkingAngle = TRUE
+			isRunning = FALSE
+			isToggleRT = TRUE
+			skipCancelToggleRT = TRUE
+		} else if (isCancelToggleAutoRun()) {
+			combo_stop(run)
+			isAutoWalkingAngle = FALSE
+			isRunning = FALSE
+		}
 	}
+	
+	set_val(TRACE_5, isRunning)
 	
 	autoWalkAngle()
 	
@@ -243,13 +257,13 @@ main {
 	}
 	
 	if (event_release(GET_HOME)) {
-        if (doHome) {
+		if (doHome) {
 			onMenu()
-	        combo_stop_all()
+			combo_stop_all()
 			combo_run(OpenHomeMenu)
 		} else {
 			doHome = TRUE
-        }
+		}
 	} else if (get_val(GET_HOME) == 100) {
 		checkChangeClass()
 		// checkChangeMode()
@@ -591,6 +605,31 @@ function isCancelToggleRTSpell() {
 	return FALSE
 }
 
+function isCancelToggleAutoRun() {
+	// Cancel auto run if any button is pressed except for analog stick
+	if (
+		event_press(XB1_A) ||
+		event_press(XB1_B) ||
+		event_press(XB1_X) ||
+		event_press(XB1_Y) ||
+		event_press(XB1_UP) ||
+		event_press(XB1_DOWN) ||
+		event_press(XB1_LEFT) ||
+		event_press(XB1_RIGHT) ||
+		event_press(XB1_LT) ||
+		event_press(XB1_RT) ||
+		event_press(XB1_LB) ||
+		event_press(XB1_RB) ||
+		event_press(XB1_SHARE) ||
+		event_press(XB1_VIEW) ||
+		event_press(XB1_MENU)
+	) {
+		return TRUE
+	}
+	
+	return FALSE
+}
+
 function cancelToggleRT() {
 	if (skipCancelToggleRT && isEasyCancel()) {
 		skipCancelToggleRT = FALSE
@@ -699,10 +738,10 @@ function checkChangeMode() {
 
 function updateOled() {
 	if (Update) {
-        paint(Classes[selectedClass], Center, 27, FontSmall, White, String)
+		paint(Classes[selectedClass], Center, 27, FontSmall, White, String)
 		paint(Modes[selectedMode], Center, 37, FontSmall, White, String)
 		Update = FALSE
-    }
+	}
 }
 
 // endregion
@@ -735,36 +774,36 @@ function rapid_look_arround_l(tolerance) {
 }
 
 function rapid_look_around_8_directions_l(tolerance) {
-    if (is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), tolerance)) {
-        angle_deg = get_polar(POLAR_LS, POLAR_ANGLE)
+	if (is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), tolerance)) {
+		angle_deg = get_polar(POLAR_LS, POLAR_ANGLE)
 
-        // Determine which of the 8 directions is closest
-        if (angle_deg < 22 || angle_deg >= 337) {
-            set_val(XB1_LX, 100)
-            set_val(XB1_LY, 0)
-        } else if (angle_deg < 67) {
-            set_val(XB1_LX, 100)  // 100 / sqrt(2)
-            set_val(XB1_LY, 100)
-        } else if (angle_deg < 112) {
-            set_val(XB1_LX, 0)
-            set_val(XB1_LY, -100)
-        } else if (angle_deg < 157) {
-            set_val(XB1_LX, -100)
-            set_val(XB1_LY, -100)
-        } else if (angle_deg < 202) {
-            set_val(XB1_LX, -100)
-            set_val(XB1_LY, 0)
-        } else if (angle_deg < 247) {
-            set_val(XB1_LX, -100)
-            set_val(XB1_LY, 100)
-        } else if (angle_deg < 292) {
-            set_val(XB1_LX, 0)
-            set_val(XB1_LY, 100)
-        } else {
-            set_val(XB1_LX, 100)
-            set_val(XB1_LY, 100)
-        }
-    }
+		// Determine which of the 8 directions is closest
+		if (angle_deg < 22 || angle_deg >= 337) {
+			set_val(XB1_LX, 100)
+			set_val(XB1_LY, 0)
+		} else if (angle_deg < 67) {
+			set_val(XB1_LX, 100)  // 100 / sqrt(2)
+			set_val(XB1_LY, 100)
+		} else if (angle_deg < 112) {
+			set_val(XB1_LX, 0)
+			set_val(XB1_LY, -100)
+		} else if (angle_deg < 157) {
+			set_val(XB1_LX, -100)
+			set_val(XB1_LY, -100)
+		} else if (angle_deg < 202) {
+			set_val(XB1_LX, -100)
+			set_val(XB1_LY, 0)
+		} else if (angle_deg < 247) {
+			set_val(XB1_LX, -100)
+			set_val(XB1_LY, 100)
+		} else if (angle_deg < 292) {
+			set_val(XB1_LX, 0)
+			set_val(XB1_LY, 100)
+		} else {
+			set_val(XB1_LX, 100)
+			set_val(XB1_LY, 100)
+		}
+	}
 }
 
 function rapid_look_around_full_l(tolerance) {
@@ -942,62 +981,62 @@ function isLeftStickDown() {
 // region OLED UTILITIES
 
 function paint(f_string, f_x, f_y, f_font, f_color, f_type) {
-    if (f_type == String) {
-        print(xLocation(getStringLength(f_string), f_font, f_x), f_y, f_font, f_color, f_string)
-    } else if (f_type == Value) {
-        if (f_string < 0) { putc_oled(1, 45) }
-        if (f_string) {
-            for (n = find_digits(f_string) + i = (f_string < 0), f_string = abs(f_string); f_string > 0; n--, i++) {
-                putc_oled(n, f_string % 10 + 48)
-                f_string = f_string / 10
-            }
-        } else {
-            putc_oled(1, 48)
-            i = 1
-        }
-        puts_oled(xLocation(i, f_font, f_x), f_y, f_font, i, f_color)
-    } else if (f_type == Oled) {
-        putc_oled(1, f_string)
-        puts_oled(f_x, f_y, f_font, 1, f_color)
-    }
+	if (f_type == String) {
+		print(xLocation(getStringLength(f_string), f_font, f_x), f_y, f_font, f_color, f_string)
+	} else if (f_type == Value) {
+		if (f_string < 0) { putc_oled(1, 45) }
+		if (f_string) {
+			for (n = find_digits(f_string) + i = (f_string < 0), f_string = abs(f_string); f_string > 0; n--, i++) {
+				putc_oled(n, f_string % 10 + 48)
+				f_string = f_string / 10
+			}
+		} else {
+			putc_oled(1, 48)
+			i = 1
+		}
+		puts_oled(xLocation(i, f_font, f_x), f_y, f_font, i, f_color)
+	} else if (f_type == Oled) {
+		putc_oled(1, f_string)
+		puts_oled(f_x, f_y, f_font, 1, f_color)
+	}
 }
 
 function getStringLength(offset) {
-    stringLength = 0
-    while (duint8(offset++)) { stringLength++ }
-    return stringLength + 1
+	stringLength = 0
+	while (duint8(offset++)) { stringLength++ }
+	return stringLength + 1
 }
 
 function xLocation(f_chars, f_font, f_x) {
-    if (f_x == -3) { return 128 - ((f_chars * (7 + (f_font > 1) + f_font * 4)) + 3) }
-    if (f_x == -2) { return 64 - ((f_chars * (7 + (f_font > 1) + f_font * 4)) / 2) }
-    if (f_x == -1) { return 3 }
-    return f_x
+	if (f_x == -3) { return 128 - ((f_chars * (7 + (f_font > 1) + f_font * 4)) + 3) }
+	if (f_x == -2) { return 64 - ((f_chars * (7 + (f_font > 1) + f_font * 4)) / 2) }
+	if (f_x == -1) { return 3 }
+	return f_x
 }
 
 function find_digits(f_num) {
-    for (n = 1; n < 11; n++) {
-        if (!(abs(f_num) / pow(10, n))) {
-            return n
-            break
-        }
-    }
-    return 1
+	for (n = 1; n < 11; n++) {
+		if (!(abs(f_num) / pow(10, n))) {
+			return n
+			break
+		}
+	}
+	return 1
 }
 
 function scheduleOledUpdate() {
-    cls_oled(0)
-    Update = TRUE
-    OledClear = 10000
+	cls_oled(0)
+	Update = TRUE
+	OledClear = 10000
 }
 
 function clearOled() {
 	OledClear = max(0, OledClear - get_rtime())
-    if (OledClear) {
-        if (OledClear <= get_rtime()) {
-            cls_oled(0)
-        }
-    }
+	if (OledClear) {
+		if (OledClear <= get_rtime()) {
+			cls_oled(0)
+		}
+	}
 }
 
 // endregion
