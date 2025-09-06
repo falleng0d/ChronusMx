@@ -199,6 +199,7 @@ main {
 				combo_stop(arrow_up)
 				combo_stop(arrow_up_simple)
 				combo_stop(rb)
+				combo_stop(rt)
 			}
 		}
 		
@@ -356,6 +357,7 @@ function rapidFireOnDoublePressRTWithArrowType() {
 			&& !get_ival(XB1_LT)
 			&& !get_ival(XB1_RB)
 			&& !get_ival(XB1_Y)
+			&& !get_ival(XB1_X)
 			&& !combo_running(rb)
 			&& !combo_running(y)
 			&& !combo_running(a)
@@ -587,7 +589,7 @@ function isCancelToggleRTArrow() {
 	if (event_press(GET_START) && isEasyCancel()) return XB1_Y
 	if (event_release(XB1_RT) && isEasyCancel()) return XB1_RT
 	
-	if(get_ival(XB1_X) && get_ptime(XB1_X) > 300) return TRUE
+	// if(get_ival(XB1_X) && get_ptime(XB1_X) > 300) return TRUE
 	// if(get_ival(XB1_Y) && get_ptime(XB1_Y) > 300) return TRUE
 	
 	return FALSE
@@ -1228,12 +1230,12 @@ combo arrow_up_simple {
 	// wait(450)
 	
 	// Barrage
-	// set_val(XB1_X, 100)
-	// wait(450)
+	set_val(XB1_A, 100)
+	wait(900)
 	
 	// Lightning Rod
 	set_val(XB1_LB, 100)
-	wait(1450)
+	wait(1050)
 	
 	// Eletrocute
 	set_val(XB1_X, 100)
