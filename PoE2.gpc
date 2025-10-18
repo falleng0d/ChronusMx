@@ -173,8 +173,9 @@ main {
 		
 		if (!get_ival(XB1_LT)) {
 			if (event_press(XB1_RB)) combo_run(rb)
-			if (event_press(XB1_Y)) combo_run(y)
+			// if (event_press(XB1_Y)) combo_run(y)
 			if (event_press(XB1_A)) combo_run(a)
+			// if (get_ival(XB1_LB) > 0) combo_run(mana_potion)
 			if (event_release(XB1_LB)) {
 				if (skipLB) {
 					skipLB = FALSE
@@ -185,6 +186,7 @@ main {
 			} else if (get_ival(XB1_LB) && skipLB) {
 				combo_stop(arrow_up)
 				combo_stop(arrow_up_simple)
+				// combo_stop(mana_potion)
 			} else if (
 				event_press(XB1_A) ||
 				event_press(XB1_B) ||
@@ -237,7 +239,6 @@ main {
 	if(get_ival(XB1_SHARE)) {
 		isMenuOpen = FALSE
 		isToggleLS = FALSE
-		
 		combo_stop_all()
 	}
 	
@@ -257,7 +258,7 @@ main {
 		if (isToggleLS) isToggleLS = FALSE
 	}
 	
-	if (event_release(GET_HOME)) {
+	if (event_press(GET_HOME)) {
 		if (doHome) {
 			onMenu()
 			combo_stop_all()
@@ -266,7 +267,7 @@ main {
 			doHome = TRUE
 		}
 	} else if (get_val(GET_HOME) == 100) {
-		checkChangeClass()
+		// checkChangeClass()
 		// checkChangeMode()
 	}
 	
@@ -340,16 +341,13 @@ function rapidFireOnDoublePressRTWithArrowType() {
 	if (isToggleRT) {
 		// Change arrow type
 		if (event_press(XB1_RT)) arrowType = XB1_RT
-		// if (event_press(XB1_LT)) arrowType = XB1_LT
-		// else if (event_press(XB1_X)) arrowType = XB1_X
-		// else if (event_press(XB1_Y)) arrowType = XB1_Y
+		// else if (event_press(XB1_RB)) arrowType = XB1_RB
 		
 		if (arrowType != prevArrowType) {
 			skipCancelToggleRT = TRUE
 			prevArrowType = arrowType
 			
-			combo_stop(rt)
-			combo_stop(lt)
+			combo_stop_all()
 		}
 		// Rapid fire
 		if (!isHoldingRT
@@ -586,7 +584,7 @@ function isCancelToggleRTArrow() {
 	// if (event_press(XB1_A) && isEasyCancel()) return XB1_A
 	// if (event_press(XB1_X) && isEasyCancel()) return XB1_X
 	// if (event_press(XB1_Y) && isEasyCancel()) return XB1_Y
-	if (event_press(GET_START) && isEasyCancel()) return XB1_Y
+	// if (event_press(GET_START) && isEasyCancel()) return XB1_Y
 	if (event_release(XB1_RT) && isEasyCancel()) return XB1_RT
 	
 	// if(get_ival(XB1_X) && get_ptime(XB1_X) > 300) return TRUE
@@ -623,7 +621,6 @@ function isCancelToggleAutoRun() {
 		event_press(XB1_LB) ||
 		event_press(XB1_RB) ||
 		event_press(XB1_SHARE) ||
-		event_press(XB1_VIEW) ||
 		event_press(XB1_MENU)
 	) {
 		return TRUE
@@ -679,7 +676,13 @@ function isEasyCancel() {
 }
 
 function changeClass(direction) {
-	selectedClass = (selectedClass + direction + 4) % 4
+	if (selectedClass == 2) {
+		selectedClass = 0
+	} else {
+		selectedClass = 2
+	}
+
+	// selectedClass = (selectedClass + direction + 4) % 4
 	set_pvar(SPVAR_1, selectedClass)
 	scheduleOledUpdate()
 	
@@ -1229,25 +1232,27 @@ combo arrow_up_simple {
 	// set_val(XB1_Y, 100)
 	// wait(450)
 	
+	// Eletrocute
+	//set_val(XB1_X, 100)
+	//wait(580)
+	
 	// Barrage
 	set_val(XB1_A, 100)
-	wait(900)
+	wait(100)
+	set_val(XB1_A, 0)
+	wait(350)
 	
 	// Lightning Rod
 	set_val(XB1_LB, 100)
-	wait(1050)
+	wait(850)
 	
-	// Eletrocute
-	set_val(XB1_X, 100)
-	wait(350)
-	
-	// Poison Arrow
-	// set_val(XB1_Y, 100)
-	// wait(850)
+	// Tornado
+	set_val(XB1_UP, 100)
+	wait(400)
 	
 	// Ashen Staff
-	set_val(XB1_RB, 100)
-	wait(850)
+	// set_val(XB1_RB, 100)
+	// wait(850)
 }
 
 combo mana_potion {
@@ -1327,3 +1332,4 @@ combo OpenHomeMenu {
 }
 
 // endregion
+ ˙æèπàΩàæéΩéªåºåÕ
