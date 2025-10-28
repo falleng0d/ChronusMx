@@ -1,0 +1,1335 @@
+// Game: Path of Exile
+//
+// Persistent Variables Reference:
+// - get_pvar(<pvar_constant>, <min_value>,  <max_value>, default_value>)
+// - set_pvar(<pvar_constant>, <value>)
+
+// region OLED DEFINITIONS
+define White = OLED_WHITE
+define Black = OLED_BLACK
+define FontSmall = OLED_FONT_SMALL
+define FontMedium = OLED_FONT_MEDIUM
+define FontLarge = OLED_FONT_LARGE
+define FontWidthSmall = OLED_FONT_SMALL_WIDTH
+define FontWidthMedium = OLED_FONT_MEDIUM_WIDTH
+define FontWidthLarge = OLED_FONT_LARGE_WIDTH
+define FontHeightSmall = OLED_FONT_SMALL_HEIGHT
+define FontHeightMedium = OLED_FONT_MEDIUM_HEIGHT
+define FontHeightLarge = OLED_FONT_LARGE_HEIGHT
+define Left = -1
+define Center = -2
+define Right = -3
+define String = 0
+define Value = 1
+define Oled = 2
+// endregion
+
+// UTILITIES
+define FORWARD = -40
+define BACKWARD = 40
+define DIR_FORWARD = -1
+define DIR_BACKWARD = 1
+define DIR_LEFT = -1
+define DIR_RIGHT = 1
+define true = TRUE
+define false = FALSE
+define DEADZONE = 8
+define DEADZONE_L = 8
+define DEADZONE_R = 5
+define MENU_DEADZONE = 20
+define MAX_RADIUS = 32767
+define AUTO_MANA_POTION_ENABLED = FALSE
+define AUTO_MANA_POTION_USE_ON_ATTACK_DURATION = 7000
+define AUTO_MANA_POTION_USE_SINGLE_ATTACK_DURATION = 400
+define AUTO_MANA_POTION_RESET_IN = 3500
+
+// ANGLE AUTO WALK RELATED
+define CANCEL_ANGLE = 360
+define CHANGE_AREA = 10
+define START_AREA = 20
+define IGNORE_AREA = 100
+
+// REMAPS
+define BTN_START = XB1_A
+define PRESS_SELECT = XB1_PR2
+define PRESS_START = XB1_PR1
+define PRESS_HOME = XB1_PL1
+define GET_SELECT = XB1_VIEW
+define GET_START = XB1_MENU
+define GET_HOME = XB1_XBOX
+define XB_B = XB1_B
+define XB_A = XB1_A
+define XB_X = XB1_X
+define XB_Y = XB1_Y
+
+// OLED
+define NEXT = 1
+define PREV = -1
+int Update, OledClear, stringLength, n, i
+
+// CLASS
+int classChanged, changedWithStick, modeChanged, modeChangedWithStick
+int selectedClass
+const string Classes[] = {"No Class", "Mercenary", "Ranger", "Witch"}
+int selectedMode
+const string Modes[] = {"No Easy Cancel", "Easy Cancel"}
+
+// RANGER
+int arrowType = XB1_RT
+int prevArrowType = XB1_RT
+
+// ANGLE AUTO WALK
+int angleDegree, isAutoWalkingAngle
+int isInsideCancelationArea, isIgnoringChanges, newAngleDegree, angleDifference
+int autoWalkAngleCancelationKey
+
+// OTHERS
+int isHoldingRT
+int isToggleRT, pressRTCount, skipCancelToggleRT
+int isToggleLS
+int isMenuOpen
+int autoAttackDuration, autoAttackDurationLastRefreshedIn
+int doHome
+int skipLB
+int skipSelect
+int isRunning
+
+// LOCAL VARIABLES (for easier code reading)
+int angle_deg // used on rapid_look_around_8_directions_l
+
+remap XB1_MENU -> XB1_PR1
+remap XB1_PR1 -> XB1_MENU
+
+// PRESS HOME
+unmap XB1_XBOX
+
+// PRESS SELECT
+remap XB1_VIEW -> XB1_PR2
+remap XB1_PR2 -> XB1_VIEW
+
+// remap XB1_B -> XB1_A
+// remap XB1_A -> XB1_B
+
+// PRESS SHARE
+unmap XB1_SHARE
+
+remap XB1_RB -> XB1_RT
+remap XB1_RT -> XB1_RB
+
+define PRESS_RB = XB1_RT
+define PRESS_RT = XB1_RB
+
+init {
+	adt_off(XB1_LT)
+	adt_off(XB1_RT)
+	reset_leds()
+	scheduleOledUpdate()
+	// selectedClass = get_pvar(SPVAR_1, 0, 10, 1)
+	// selectedMode = get_pvar(SPVAR_2, 0, 10, 1)
+	selectedClass = 2
+	selectedMode = 1
+}
+
+main {
+	set_left_triggers_threshold(1)
+	set_right_triggers_threshold(1, 1)
+	rapid_look_around_full_r(DEADZONE_R)
+
+	applyDeadzone(XB1_RX, DEADZONE_R)
+	applyDeadzone(XB1_RY, DEADZONE_R)
+	
+	// Stop running
+	if (isRunning) {
+		if (event_press(XB1_B)) {
+			combo_stop(run)
+			combo_run(stop_run)
+			isAutoWalkingAngle = FALSE
+			isRunning = FALSE
+		} else if (event_press(XB1_RT)) {
+			combo_stop(run)
+			isAutoWalkingAngle = TRUE
+			isRunning = FALSE
+			isToggleRT = TRUE
+			skipCancelToggleRT = TRUE
+		} else if (isCancelToggleAutoRun()) {
+			combo_stop(run)
+			isAutoWalkingAngle = FALSE
+			isRunning = FALSE
+		}
+	}
+	
+	set_val(TRACE_5, isRunning)
+	
+	autoWalkAngle()
+	
+	if (isMercenary() && !isMenuOpen) {
+		preciseShotOnHoldRT()
+		preventRapidFireCancelationOnScatterShot(XB1_RB)
+		rapidFireOnDoublePressRT()
+	}
+	
+	if (isRanger() && !isMenuOpen) {
+		if (get_ival(XB1_LB) && get_ptime(XB1_LB) > 250) skipLB = TRUE
+		
+		if (!get_ival(XB1_LT)) {
+			if (event_press(XB1_RB)) combo_run(rb)
+			// if (event_press(XB1_Y)) combo_run(y)
+			if (event_press(XB1_A)) combo_run(a)
+			// if (get_ival(XB1_LB) > 0) combo_run(mana_potion)
+			if (event_release(XB1_LB)) {
+				if (skipLB) {
+					skipLB = FALSE
+				} else {
+					combo_run(arrow_up_simple)
+					isToggleRT = TRUE
+				}
+			} else if (get_ival(XB1_LB) && skipLB) {
+				combo_stop(arrow_up)
+				combo_stop(arrow_up_simple)
+				// combo_stop(mana_potion)
+			} else if (
+				event_press(XB1_A) ||
+				event_press(XB1_B) ||
+				event_press(XB1_X) ||
+				event_press(XB1_Y) ||
+				event_press(XB1_UP) ||
+				event_press(XB1_LT) ||
+				event_press(XB1_RT) ||
+				event_press(XB1_SHARE) ||
+				event_press(XB1_MENU)
+			) {
+				combo_stop(arrow_up)
+				combo_stop(arrow_up_simple)
+				combo_stop(rb)
+				combo_stop(rt)
+			}
+		}
+		
+		if (get_ival(XB1_LT)) combo_run(rb_fast)
+		else combo_stop(rb_fast)
+		
+		rapidFireOnDoublePressRTWithArrowType()
+		
+		if (AUTO_MANA_POTION_ENABLED) {
+			doAutoManaPotion()
+		}
+	}
+	
+	if (isWitch() && !isMenuOpen) {
+		rapidFireOnDoublePressRTSpell()
+		if (isToggleRT) {
+			combo_run(aux_witch_spells_1) // Y
+			// combo_run(aux_witch_spells_2)
+			combo_run(aux_witch_spells_3) // LT
+			combo_run(aux_witch_spells_4) // LB
+		} else {
+			combo_stop(aux_witch_spells_1)
+			combo_stop(aux_witch_spells_2)
+			combo_stop(aux_witch_spells_3)
+			combo_stop(aux_witch_spells_4)
+		}
+	}
+	
+	if (get_ival(GET_START)) {
+		set_val(XB1_A, 100)
+	}
+
+	onSelect()
+
+	if(get_ival(XB1_SHARE)) {
+		isMenuOpen = FALSE
+		isToggleLS = FALSE
+		combo_stop_all()
+	}
+	
+	if (event_release(XB1_VIEW)) skipSelect = FALSE
+	
+	// region MENU RELATED
+	
+	if (event_press(XB1_LS)) {
+		isToggleLS = TRUE
+	}
+	
+	if (isToggleLS) {
+		set_val(XB1_LS, 100)
+	}
+	
+	if (event_press(XB1_B)) {
+		if (isToggleLS) isToggleLS = FALSE
+	}
+	
+	if (event_press(GET_HOME)) {
+		if (doHome) {
+			onMenu()
+			combo_stop_all()
+			combo_run(OpenHomeMenu)
+		} else {
+			doHome = TRUE
+		}
+	} else if (get_val(GET_HOME) == 100) {
+		// checkChangeClass()
+		// checkChangeMode()
+	}
+	
+	// endregion
+	
+	// OLED
+	// clearOled()
+	updateOled()
+}
+
+// region CLASS SPECIFIC
+
+/**
+ * Press LB + RT on hold XB1_RT
+ *
+ * @description Mercenary
+ */
+function preciseShotOnHoldRT() {
+	if (get_ival(XB1_RT) && get_ptime(XB1_RT) > 200 && !isHoldingRT) {
+		combo_stop(rt)
+		combo_run(hold_rt)
+		isHoldingRT = TRUE
+		skipCancelToggleRT = TRUE
+	}
+	
+	if (event_release(XB1_RT)) {
+		isHoldingRT = FALSE
+	}
+}
+
+/**
+ * SCATTER SHOT
+ * Press XB1_RB while RAPID FIRE -> skipCancelToggleRT
+ * skipCancelToggleRT is set to prevent the cancelation of the rapid fire combo
+ * when pressing XB1_X to go back to the previous ammo type
+ *
+ * @description Mercenary
+ */
+function preventRapidFireCancelationOnScatterShot(scatterShotKey) {
+	if (isToggleRT && get_ival(scatterShotKey)) {
+		skipCancelToggleRT = TRUE
+	}
+}
+
+/**
+ * RAPID FIRE
+ * Rapidly press XB1_RT twice in quick succession to activate rapid fire mode
+ * Press XB1_RT to cancel rapid fire mode (if easy cancel is enabled)
+ *
+ * @description Mercenary
+ */
+function rapidFireOnDoublePressRT() {
+	if (!isToggleRT) {
+		isToggleRT = isRapidDoublePressRT()
+	} else if (isCancelToggleRT()) {
+		cancelToggleRT()
+	}
+	
+	if (isToggleRT && !get_ival(XB1_LB) && !isHoldingRT) combo_run(rt)
+}
+
+/**
+ * RAPID FIRE
+ * Rapidly press XB1_RT twice in quick succession to activate rapid fire mode
+ * Press XB1_RT to cancel rapid fire mode (if easy cancel is enabled)
+ * Press XB1_X, XB1_Y, XB1_A, XB1_B to rapid fire the respective arrow type
+ *
+ * @description Ranger
+ */
+function rapidFireOnDoublePressRTWithArrowType() {
+	if (isToggleRT) {
+		// Change arrow type
+		if (event_press(XB1_RT)) arrowType = XB1_RT
+		// else if (event_press(XB1_RB)) arrowType = XB1_RB
+		
+		if (arrowType != prevArrowType) {
+			skipCancelToggleRT = TRUE
+			prevArrowType = arrowType
+			
+			combo_stop_all()
+		}
+		// Rapid fire
+		if (!isHoldingRT
+			&& !get_ival(XB1_LB)
+			&& !get_ival(XB1_LT)
+			&& !get_ival(XB1_RB)
+			&& !get_ival(XB1_Y)
+			&& !get_ival(XB1_X)
+			&& !combo_running(rb)
+			&& !combo_running(y)
+			&& !combo_running(a)
+			&& !combo_running(arrow_up)
+			&& !combo_running(arrow_up_simple)
+			&& !combo_running(rb_fast)
+		) {
+			if (arrowType == XB1_RT) combo_run(rt)
+			else if (arrowType == XB1_LT) combo_run(lt)
+		}
+	}
+	
+	if (!isToggleRT) {
+		// if (isAutoWalkingAngle && event_release(XB1_RT)) {
+		// 	isToggleRT = TRUE
+		// } else {
+		// }
+		isToggleRT = isRapidDoublePressRT()
+		arrowType = XB1_RT
+		prevArrowType = XB1_RT
+	} else if (isCancelToggleRTArrow()) {
+		cancelToggleRT()
+	}
+}
+
+function rapidFireOnDoublePressRTSpell() {
+	if (isToggleRT) {
+		// Rapid fire
+		if (!isHoldingRT
+			&& !get_ival(XB1_LB)
+			&& !get_ival(XB1_LT)
+			&& !get_ival(XB1_RB)
+			&& !get_ival(XB1_A)
+			&& !get_ival(XB1_B)
+			&& !get_ival(XB1_X)
+			&& !get_ival(XB1_Y)
+			&& !combo_running(rb)
+			&& !combo_running(y)
+		) {
+			combo_run(rt)
+		}
+	}
+	
+	if (!isToggleRT) {
+		isToggleRT = isRapidDoublePressRT()
+	} else if (isCancelToggleRTSpell()) {
+		cancelToggleRT()
+	}
+}
+
+// endregion
+
+// region SCRIPT SPECIFIC
+
+function startRunning() {
+	isRunning = TRUE
+	isAutoWalkingAngle = TRUE
+	isIgnoringChanges = FALSE
+	isToggleRT = FALSE
+	
+	combo_stop_all()
+	
+	if (combo_running(run)) combo_restart(run)
+	else combo_run(run)
+}
+
+function onSelect() {
+	if (event_release(GET_SELECT)) {
+		skipSelect = FALSE
+	}
+	
+	if (!get_ival(GET_SELECT)) {
+		return
+	}
+	
+	if (isMenuOpen) {
+		set_val(XB1_B, 100)
+		return
+	}
+	
+	if (isAutoWalkingAngle || (!skipSelect && get_ptime(GET_SELECT) < 400)) {
+		return
+	}
+	
+	startRunning()
+}
+
+function onMenu() {
+	isToggleRT = FALSE
+	isAutoWalkingAngle = FALSE
+	pressRTCount = 0
+	skipCancelToggleRT = FALSE
+	isHoldingRT = FALSE
+	isToggleLS = FALSE
+	isMenuOpen = TRUE
+	skipLB = FALSE
+	isRunning = FALSE
+}
+
+function autoWalkAngle() {
+	if(isAutoWalkingAngle) {
+		if (event_press(GET_HOME)) {
+			autoWalkAngleCancelationKey = GET_HOME
+			isAutoWalkingAngle = FALSE
+			isRunning = FALSE
+		} else if (event_press(XB1_SHARE)) {
+			autoWalkAngleCancelationKey = XB1_SHARE
+			isAutoWalkingAngle = FALSE
+			isRunning = FALSE
+		} else if (event_press(XB1_XBOX)) {
+			autoWalkAngleCancelationKey = XB1_XBOX
+			isAutoWalkingAngle = FALSE
+			isRunning = FALSE
+		}
+	}
+
+	if(autoWalkAngleCancelationKey) {
+		if(event_release(autoWalkAngleCancelationKey)) {
+			autoWalkAngleCancelationKey = 0
+		} else {
+			set_val(autoWalkAngleCancelationKey, 0)
+		}
+	}
+
+	// Check if the left joystick has moved past an initial circular radius X
+	if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), START_AREA)) {
+		// Capture the direction and angle of the joystick
+		if(!isAutoWalkingAngle && event_press(GET_SELECT)) {
+			angleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
+			// set_val(TRACE_1, angleDegree)
+			isAutoWalkingAngle = TRUE
+			isIgnoringChanges = TRUE
+			isMenuOpen = FALSE
+			skipSelect = TRUE
+		} else if (isAutoWalkingAngle) {
+			if (!isInsideCancelationArea) {
+				// If the new angle is not within X degrees of the previous angle cancel isAutoWalkingAngle
+				// set_val(TRACE_2, angleDegree)
+				newAngleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
+				// set_val(TRACE_3, newAngleDegree)
+				angleDifference = newAngleDegree - angleDegree
+				// set_val(TRACE_4, angleDifference)
+				if(angleDifference <= 180 && abs(angleDifference) <= CANCEL_ANGLE) {
+					isAutoWalkingAngle = TRUE
+				} else if (angleDifference > 180 && abs(360 - angleDifference) <= CANCEL_ANGLE) {
+					isAutoWalkingAngle = TRUE
+				} else {
+					isAutoWalkingAngle = FALSE
+					set_val(TRACE_1, 0)
+				}
+			}
+
+			isInsideCancelationArea = TRUE
+			
+			if (event_press(GET_SELECT)) {
+				startRunning()
+			}
+		}
+	} else {
+		isInsideCancelationArea = FALSE
+	}
+
+	// Move the character in the direction of the captured angle
+	if(isAutoWalkingAngle) {
+		if(isIgnoringChanges) {
+			// wait for the joystick to move back inside the circular radius 30
+			isIgnoringChanges = !is_analog_inside_circle(get_ival(XB1_LX), get_ival(XB1_LY), IGNORE_AREA)
+			// set_val(TRACE_5, isIgnoringChanges)
+		} else {
+			// Check if the left joystick has moved past the circular radius 70 (into the direction change area)
+			if(is_analog_outside_circle(get_ival(XB1_LX), get_ival(XB1_LY), CHANGE_AREA)) {
+				angleDegree = get_polar(POLAR_LS, POLAR_ANGLE)
+				// set_val(TRACE_1, angleDegree)
+			}
+		}
+
+		set_polar(POLAR_LS, -angleDegree, MAX_RADIUS)
+	} else {
+		applyDeadzone(XB1_LX, DEADZONE_L)
+		applyDeadzone(XB1_LY, DEADZONE_L)
+
+		rapid_look_around_full_l(DEADZONE_L)
+	}
+}
+
+function isRapidDoublePressRT() {
+	if(event_press(XB1_RT)) {
+		if (pressRTCount == 0) {
+			pressRTCount = pressRTCount + 1
+		} else if (get_ptime(XB1_RT) < 200) {
+			pressRTCount = 0
+			skipCancelToggleRT = TRUE
+			return TRUE
+		}
+	}
+	
+	if(get_ival(XB1_RT) == 0 && get_ptime(XB1_RT) > 200 && pressRTCount > 0) {
+		pressRTCount = 0
+		autoAttackDuration = autoAttackDuration + AUTO_MANA_POTION_USE_SINGLE_ATTACK_DURATION
+		autoAttackDurationLastRefreshedIn = 0
+	}
+	
+	return FALSE
+}
+
+function isCancelToggleRT() {
+	if (event_release(XB1_RT) && isEasyCancel()) return XB1_RT
+	if (event_press(XB1_X) && isEasyCancel()) return XB1_X
+	if (event_press(XB1_SHARE)) return XB1_SHARE
+	if (event_press(XB1_UP)) return XB1_UP
+	if (event_press(XB1_A) && isEasyCancel()) return XB1_A
+	if (event_press(XB1_Y) && isEasyCancel()) return XB1_Y
+	
+	if(get_ival(XB1_X) && get_ptime(XB1_X) > 300) return TRUE
+	if(get_ival(XB1_Y) && get_ptime(XB1_Y) > 300) return TRUE
+	
+	return FALSE
+}
+
+function isCancelToggleRTArrow() {
+	if (get_ival(XB1_LT)) return FALSE
+	
+	if (event_press(XB1_SHARE)) return XB1_SHARE
+	if (event_press(XB1_UP)) return XB1_UP
+	
+	// if (event_press(XB1_A) && isEasyCancel()) return XB1_A
+	// if (event_press(XB1_X) && isEasyCancel()) return XB1_X
+	// if (event_press(XB1_Y) && isEasyCancel()) return XB1_Y
+	// if (event_press(GET_START) && isEasyCancel()) return XB1_Y
+	if (event_release(XB1_RT) && isEasyCancel()) return XB1_RT
+	
+	// if(get_ival(XB1_X) && get_ptime(XB1_X) > 300) return TRUE
+	// if(get_ival(XB1_Y) && get_ptime(XB1_Y) > 300) return TRUE
+	
+	return FALSE
+}
+
+function isCancelToggleRTSpell() {
+	if (get_ival(XB1_LT)) return FALSE
+	
+	if (event_press(XB1_SHARE)) return XB1_SHARE
+	if (event_press(XB1_UP)) return XB1_UP
+	
+	if (event_press(GET_START) && isEasyCancel()) return XB1_Y
+	if (event_release(XB1_RT) && isEasyCancel()) return XB1_RT
+	
+	return FALSE
+}
+
+function isCancelToggleAutoRun() {
+	// Cancel auto run if any button is pressed except for analog stick
+	if (
+		event_press(XB1_A) ||
+		event_press(XB1_B) ||
+		event_press(XB1_X) ||
+		event_press(XB1_Y) ||
+		event_press(XB1_UP) ||
+		event_press(XB1_DOWN) ||
+		event_press(XB1_LEFT) ||
+		event_press(XB1_RIGHT) ||
+		event_press(XB1_LT) ||
+		event_press(XB1_RT) ||
+		event_press(XB1_LB) ||
+		event_press(XB1_RB) ||
+		event_press(XB1_SHARE) ||
+		event_press(XB1_MENU)
+	) {
+		return TRUE
+	}
+	
+	return FALSE
+}
+
+function cancelToggleRT() {
+	if (skipCancelToggleRT && isEasyCancel()) {
+		skipCancelToggleRT = FALSE
+		return
+	}
+	
+	isToggleRT = FALSE
+	combo_stop_all()
+}
+
+function doAutoManaPotion() {
+	if (isToggleRT || get_ival(XB1_RT)) {
+		autoAttackDuration = autoAttackDuration + get_rtime()
+		autoAttackDurationLastRefreshedIn = 0
+	}
+	
+	if (autoAttackDuration > AUTO_MANA_POTION_USE_ON_ATTACK_DURATION) {
+		combo_run(mana_potion)
+		autoAttackDuration = 0
+		autoAttackDurationLastRefreshedIn = 0
+	} else {
+		autoAttackDurationLastRefreshedIn = autoAttackDurationLastRefreshedIn + get_rtime()
+		
+		if (autoAttackDurationLastRefreshedIn > AUTO_MANA_POTION_RESET_IN) {
+			autoAttackDuration = 0
+			autoAttackDurationLastRefreshedIn = 0
+		}
+	}
+}
+
+function isMercenary() {
+	return selectedClass == 1
+}
+
+function isRanger() {
+	return selectedClass == 2
+}
+
+function isWitch() {
+	return selectedClass == 3
+}
+
+function isEasyCancel() {
+	return selectedMode == 1
+}
+
+function changeClass(direction) {
+	if (selectedClass == 2) {
+		selectedClass = 0
+	} else {
+		selectedClass = 2
+	}
+
+	// selectedClass = (selectedClass + direction + 4) % 4
+	set_pvar(SPVAR_1, selectedClass)
+	scheduleOledUpdate()
+	
+	isHoldingRT = FALSE
+	isToggleRT = FALSE
+	skipCancelToggleRT = FALSE
+	pressRTCount = 0
+	skipLB = FALSE
+	isMenuOpen = FALSE
+}
+
+function changeMode(direction) {
+	selectedMode = (selectedMode + direction + 2) % 2
+	set_pvar(SPVAR_2, selectedMode)
+	scheduleOledUpdate()
+}
+
+function checkChangeClass() {
+	if (!classChanged && !modeChanged) {
+		if (isRightStickLeft() || isLeftStickLeft()) {
+			changeClass(PREV)
+			classChanged = TRUE
+		} else if (isRightStickRight() || isLeftStickRight()) {
+			changeClass(NEXT)
+			classChanged = TRUE
+		}
+		
+		if (classChanged) {
+			doHome = FALSE
+			if(isRightStickLeft() || isRightStickRight()) changedWithStick = XB1_RX
+			else changedWithStick = XB1_LX
+		}
+	} else if (abs(get_ival(changedWithStick)) < DEADZONE) {
+		classChanged = FALSE
+	}
+}
+
+function checkChangeMode() {
+	if (!modeChanged && !classChanged) {
+		if (isRightStickUp() || isLeftStickUp()) {
+			changeMode(NEXT)
+			modeChanged = TRUE
+		} else if (isRightStickDown() || isLeftStickDown()) {
+			changeMode(PREV)
+			modeChanged = TRUE
+		}
+		
+		if (modeChanged) {
+			doHome = FALSE
+			if(isRightStickUp() || isRightStickDown()) modeChangedWithStick = XB1_RY
+			else modeChangedWithStick = XB1_LY
+			scheduleOledUpdate()
+		}
+	} else if (abs(get_ival(modeChangedWithStick)) < DEADZONE) {
+		modeChanged = FALSE
+	}
+}
+
+function updateOled() {
+	if (Update) {
+		paint(Classes[selectedClass], Center, 27, FontSmall, White, String)
+		paint(Modes[selectedMode], Center, 37, FontSmall, White, String)
+		Update = FALSE
+	}
+}
+
+// endregion
+
+// region SHARED UTILITIES
+
+function get_radius(x, y) {
+	return isqrt(x * x + y * y)
+}
+
+function is_analog_inside_circle(x, y, radius) {
+	return (x * x + y * y) <= radius * radius
+}
+
+function is_analog_outside_circle(x, y, radius) {
+	return (x * x + y * y) > radius * radius
+}
+
+function rapid_look_arround_l(tolerance) {
+	if(get_val(XB1_LY) > tolerance) {
+		set_val(XB1_LY, 100)
+	} else if(get_val(XB1_LY) < -tolerance) {
+		set_val(XB1_LY, -100)
+	}
+	if(get_val(XB1_LX) > tolerance) {
+		set_val(XB1_LX, 100)
+	} else if(get_val(XB1_LX) < -tolerance) {
+		set_val(XB1_LX, -100)
+	}
+}
+
+function rapid_look_around_8_directions_l(tolerance) {
+	if (is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), tolerance)) {
+		angle_deg = get_polar(POLAR_LS, POLAR_ANGLE)
+
+		// Determine which of the 8 directions is closest
+		if (angle_deg < 22 || angle_deg >= 337) {
+			set_val(XB1_LX, 100)
+			set_val(XB1_LY, 0)
+		} else if (angle_deg < 67) {
+			set_val(XB1_LX, 100)  // 100 / sqrt(2)
+			set_val(XB1_LY, 100)
+		} else if (angle_deg < 112) {
+			set_val(XB1_LX, 0)
+			set_val(XB1_LY, -100)
+		} else if (angle_deg < 157) {
+			set_val(XB1_LX, -100)
+			set_val(XB1_LY, -100)
+		} else if (angle_deg < 202) {
+			set_val(XB1_LX, -100)
+			set_val(XB1_LY, 0)
+		} else if (angle_deg < 247) {
+			set_val(XB1_LX, -100)
+			set_val(XB1_LY, 100)
+		} else if (angle_deg < 292) {
+			set_val(XB1_LX, 0)
+			set_val(XB1_LY, 100)
+		} else {
+			set_val(XB1_LX, 100)
+			set_val(XB1_LY, 100)
+		}
+	}
+}
+
+function rapid_look_around_full_l(tolerance) {
+	if (is_analog_outside_circle(get_val(XB1_LX), get_val(XB1_LY), tolerance)) {
+		set_polar(POLAR_LS, 0 - get_polar(POLAR_LS, POLAR_ANGLE), MAX_RADIUS)
+	}
+}
+
+function rapid_look_around_full_r(tolerance) {
+	if (is_analog_outside_circle(get_val(XB1_RX), get_val(XB1_RY), tolerance)) {
+		set_polar(POLAR_RS, 0 - get_polar(POLAR_RS, POLAR_ANGLE), MAX_RADIUS)
+	}
+}
+
+function rapid_look_around_full(tolerance, xval, rval, sourceStick, targetStick) {
+	if (is_analog_outside_circle(xval, rval, tolerance)) {
+		set_polar(targetStick, 0 - get_polar(sourceStick, POLAR_ANGLE), MAX_RADIUS)
+	}
+}
+
+function finger_trigger_left_analog(tolerance) {
+	if(get_val(XB1_LY) > tolerance) {
+		set_val(XB1_LY, 100)
+	} else if(get_val(XB1_LY) < -tolerance) {
+		set_val(XB1_LY, -100)
+	}
+	if(get_val(XB1_LX) > tolerance) {
+		set_val(XB1_LX, 100)
+	} else if(get_val(XB1_LX) < -tolerance) {
+		set_val(XB1_LX, -100)
+	}
+}
+
+function finger_trigger_right_analog(tolerance) {
+	if(get_val(XB1_RY) > tolerance) {
+		set_val(XB1_RY, 100)
+	} else if(get_val(XB1_RY) < -tolerance) {
+		set_val(XB1_RY, -100)
+	}
+	if(get_val(XB1_RX) > tolerance) {
+		set_val(XB1_RX, 100)
+	} else if(get_val(XB1_RX) < -tolerance) {
+		set_val(XB1_RX, -100)
+	}
+}
+
+function set_left_triggers_threshold(threshold) {
+	if(get_val(XB1_LB) < threshold) set_val(XB1_LB, 0) else set_val(XB1_LB, 100)
+	if(get_val(XB1_LT) < threshold) set_val(XB1_LT, 0) else set_val(XB1_LT, 100)
+}
+
+function set_right_triggers_threshold(threshold, threshold_small) {
+	// if XB1_LT is pressed(aiming), the threshold is smaller
+	if(get_val(XB1_LT) > threshold) {
+		threshold = threshold_small
+	}
+
+	if(get_val(XB1_RB) < threshold) set_val(XB1_RB, 0) else set_val(XB1_RB, 100)
+	if(get_val(XB1_RT) < threshold) set_val(XB1_RT, 0) else set_val(XB1_RT, 100)
+}
+
+function getDirection(stick) {
+	if(get_val(stick) > 0) {
+		return 1
+	} else if (get_val(stick) < 0) {
+		return -1
+	}
+
+	return 0
+}
+
+function isLeftAxisForward(min_intensity) {
+	return get_val(XB1_LY) < -min_intensity
+}
+
+function isLeftAxisBackward(min_intensity) {
+	return get_val(XB1_LY) >= min_intensity
+}
+
+function isLeftAxisLeft(min_intensity) {
+	return get_val(XB1_LX) < -min_intensity
+}
+
+function isLeftAxisRight(min_intensity) {
+	return get_val(XB1_LX) >= min_intensity
+}
+
+function onStartMenuHotkeyComboPressed() {
+	doActivateRadar = FALSE
+}
+
+function isRapidMultiPress(btA, btB) {
+	if(event_press(btA) && get_ptime(btB) <= 100 ||
+		event_press(btB) && get_ptime(btA) <= 100){
+		return TRUE
+	}
+
+	return FALSE
+}
+
+function isMultiPress(btA, btB) {
+	if((event_press(btB) && get_val(btA) > 0)
+	 || (event_press(btA) && get_val(btB) > 0)) {
+		return TRUE
+	}
+
+	return FALSE
+}
+
+function isMultiPressStickForward(bt, stick, sensitivity) {
+	if(event_press(bt) && get_val(stick) < sensitivity) {
+		return TRUE
+	}
+
+	return FALSE
+}
+
+function isMultiPressStickAnyDirection(bt, stick, sensitivity) {
+	if(event_press(bt) && (abs(get_val(stick)) >= sensitivity)) {
+		return TRUE
+	}
+	return FALSE
+}
+
+function useDeadzone(bt, deadzone) {
+	if(abs(get_val(bt)) >= deadzone) {
+		return get_val(bt)
+	}
+
+	return 0
+}
+
+function applyDeadzone(bt, deadzone) {
+	set_val(bt, useDeadzone(bt, 10))
+}
+
+// endregion
+
+// region OLED MENU UTILITIES
+
+function isRightStickLeft() {
+	return get_ival(XB1_RX) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isRightStickRight() {
+	return get_ival(XB1_RX) > (MENU_DEADZONE * DIR_RIGHT)
+}
+
+function isRightStickUp() {
+	return get_ival(XB1_RY) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isRightStickDown() {
+	return get_ival(XB1_RY) >= (MENU_DEADZONE * DIR_RIGHT)
+}
+
+function isLeftStickLeft() {
+	return get_ival(XB1_LX) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isLeftStickRight() {
+	return get_ival(XB1_LX) > (MENU_DEADZONE * DIR_RIGHT)
+}
+
+function isLeftStickUp() {
+	return get_ival(XB1_LY) < (MENU_DEADZONE * DIR_LEFT)
+}
+
+function isLeftStickDown() {
+	return get_ival(XB1_LY) >= (MENU_DEADZONE * DIR_RIGHT)
+}
+
+// endregion
+
+// region OLED UTILITIES
+
+function paint(f_string, f_x, f_y, f_font, f_color, f_type) {
+	if (f_type == String) {
+		print(xLocation(getStringLength(f_string), f_font, f_x), f_y, f_font, f_color, f_string)
+	} else if (f_type == Value) {
+		if (f_string < 0) { putc_oled(1, 45) }
+		if (f_string) {
+			for (n = find_digits(f_string) + i = (f_string < 0), f_string = abs(f_string); f_string > 0; n--, i++) {
+				putc_oled(n, f_string % 10 + 48)
+				f_string = f_string / 10
+			}
+		} else {
+			putc_oled(1, 48)
+			i = 1
+		}
+		puts_oled(xLocation(i, f_font, f_x), f_y, f_font, i, f_color)
+	} else if (f_type == Oled) {
+		putc_oled(1, f_string)
+		puts_oled(f_x, f_y, f_font, 1, f_color)
+	}
+}
+
+function getStringLength(offset) {
+	stringLength = 0
+	while (duint8(offset++)) { stringLength++ }
+	return stringLength + 1
+}
+
+function xLocation(f_chars, f_font, f_x) {
+	if (f_x == -3) { return 128 - ((f_chars * (7 + (f_font > 1) + f_font * 4)) + 3) }
+	if (f_x == -2) { return 64 - ((f_chars * (7 + (f_font > 1) + f_font * 4)) / 2) }
+	if (f_x == -1) { return 3 }
+	return f_x
+}
+
+function find_digits(f_num) {
+	for (n = 1; n < 11; n++) {
+		if (!(abs(f_num) / pow(10, n))) {
+			return n
+			break
+		}
+	}
+	return 1
+}
+
+function scheduleOledUpdate() {
+	cls_oled(0)
+	Update = TRUE
+	OledClear = 10000
+}
+
+function clearOled() {
+	OledClear = max(0, OledClear - get_rtime())
+	if (OledClear) {
+		if (OledClear <= get_rtime()) {
+			cls_oled(0)
+		}
+	}
+}
+
+// endregion
+
+// region COMBOS
+
+combo hold_rt {
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RT, 0)
+	wait(10)
+	set_val(XB1_LT, 100)
+	set_val(PRESS_RT, 0)
+	wait(70)
+	set_val(XB1_LT, 100)
+	set_val(PRESS_RT, 100)
+	wait(100)
+	set_val(XB1_LT, 100)
+	set_val(PRESS_RT, 0)
+	
+	wait(70)
+	set_val(XB1_LT, 0)
+	wait(70)
+	
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 100)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 0)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 100)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 0)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 100)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 0)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 100)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 0)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 100)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(PRESS_RB, 0)
+	wait(150)
+	set_val(XB1_LT, 0)
+	set_val(XB1_X, 100)
+	wait(70)
+	set_val(XB1_LT, 0)
+	set_val(XB1_X, 0)
+	wait(70)
+	set_val(XB1_LT, 0)
+	set_val(XB1_X, 100)
+	wait(70)
+}
+
+combo rt {
+	set_val(XB1_RT, 100)
+	wait(100)
+	set_val(XB1_RT, 0)
+	wait(50)
+}
+
+combo lt {
+	set_val(XB1_LT, 100); wait(100)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+}
+
+// Uses auxiliary witch spells
+combo aux_witch_spells_1 {
+	set_val(XB1_Y, 100)
+	wait(100)
+	set_val(XB1_Y, 0)
+	wait(100)
+}
+
+combo aux_witch_spells_2 {
+	wait(100)
+	set_val(XB1_A, 100)
+	wait(100)
+	set_val(XB1_A, 0)
+}
+
+combo aux_witch_spells_3 {
+	wait(500)
+	set_val(XB1_LT, 100)
+	wait(100)
+	set_val(XB1_LT, 0)
+	wait(70)
+	set_val(XB1_LT, 100)
+	wait(100)
+	set_val(XB1_LT, 0)
+	wait(70)
+	set_val(XB1_LT, 100)
+	wait(100)
+	set_val(XB1_LT, 0)
+	wait(70)
+	set_val(XB1_LT, 100)
+	wait(100)
+	set_val(XB1_LT, 0)
+	wait(70)
+	set_val(XB1_LT, 100)
+	wait(100)
+	set_val(XB1_LT, 0)
+	wait(70)
+	wait(6000)
+}
+
+combo aux_witch_spells_4 {
+	wait(1000)
+	set_val(XB1_LB, 100)
+	wait(100)
+	set_val(XB1_LB, 0)
+	wait(70)
+	set_val(XB1_LB, 100)
+	wait(100)
+	set_val(XB1_LB, 0)
+	wait(70)
+	set_val(XB1_LB, 100)
+	wait(100)
+	set_val(XB1_LB, 0)
+	wait(70)
+	set_val(XB1_LB, 100)
+	wait(100)
+	set_val(XB1_LB, 0)
+	wait(70)
+	set_val(XB1_LB, 100)
+	wait(100)
+	set_val(XB1_LB, 0)
+	wait(70)
+}
+
+combo rb {
+	set_val(XB1_RB, 100)
+	wait(1000)
+	set_val(XB1_RB, 0)
+	wait(50)
+}
+
+combo rb_fast {
+	wait(75)
+	set_val(XB1_RB, 100)
+	wait(75)
+}
+
+// Voltaic Mark
+combo y {
+	set_val(XB1_Y, 100)
+	wait(750)
+	set_val(XB1_Y, 0)
+	wait(50)
+}
+
+combo a {
+	set_val(XB1_A, 100)
+	wait(600)
+}
+
+combo arrow_up {
+	// Barrage
+	set_val(XB1_X, 100)
+	wait(500)
+	// Lightning Rod
+	set_val(XB1_LB, 100)
+	wait(1250)
+	// Orb of Storms
+	set_val(XB1_UP, 100)
+	wait(550)
+}
+
+combo arrow_up_simple {
+	// Exposuree
+	// set_val(XB1_Y, 100)
+	// wait(450)
+	
+	// Eletrocute
+	//set_val(XB1_X, 100)
+	//wait(580)
+	
+	// Barrage
+	set_val(XB1_A, 100)
+	wait(100)
+	set_val(XB1_A, 0)
+	wait(250)
+	
+	// Lightning Rod
+	set_val(XB1_LB, 100)
+	wait(550)
+	
+	// Tornado
+	set_val(XB1_UP, 100)
+	wait(200)
+	
+	// Ashen Staff
+	// set_val(XB1_RB, 100)
+	// wait(850)
+}
+
+combo mana_potion {
+	set_val(XB1_RIGHT, 100)
+	wait(100)
+	set_val(XB1_RT, 0)
+	wait(50)
+}
+
+combo run {
+	set_val(XB1_B, 0)
+	set_val(XB1_LX, 0)
+	set_val(XB1_LY, 0)
+	wait(75)
+	set_val(XB1_B, 100)
+	wait(1000)
+	set_val(XB1_B, 0)
+}
+
+combo stop_run {
+	set_val(XB1_B, 0)
+	set_val(XB1_LX, 0)
+	set_val(XB1_LY, 0)
+	wait(75)
+	set_val(XB1_B, 100)
+}
+
+combo rapid_fire_x {
+	set_val(XB1_X, 100)
+	wait(50)
+	set_val(XB1_X, 0)
+	wait(50)
+}
+
+combo rapid_fire_y {
+	set_val(XB1_Y, 100)
+	wait(50)
+	set_val(XB1_Y, 0)
+	wait(50)
+}
+
+combo rapid_fire_b {
+	set_val(XB1_B, 100)
+	wait(50)
+	set_val(XB1_B, 0)
+	wait(50)
+}
+
+combo rapid_fire_a {
+	set_val(XB1_A, 100)
+	wait(50)
+	set_val(XB1_A, 0)
+	wait(50)
+}
+
+combo snipe {
+	set_val(XB1_RS, 100)
+	wait(50)
+}
+
+combo OpenStartMenu {
+	set_val(PRESS_START, 100)
+	wait(200)
+	set_val(PRESS_START, 0)
+}
+
+combo OpenSelectMenu {
+	set_val(PRESS_SELECT, 100)
+	wait(200)
+	set_val(PRESS_SELECT, 0)
+}
+
+combo OpenHomeMenu {
+	set_val(PRESS_SELECT, 100)
+	wait(200)
+	set_val(PRESS_SELECT, 0)
+}
+
+// endregion
+ ����������������
