@@ -92,7 +92,6 @@ int autoAttackDuration, autoAttackDurationLastRefreshedIn
 int doHome
 int skipLB
 int skipSelect
-int isRunning
 
 // LOCAL VARIABLES (for easier code reading)
 int angle_deg // used on rapid_look_around_8_directions_l
@@ -138,35 +137,7 @@ main {
 	applyDeadzone(XB1_RX, DEADZONE_R)
 	applyDeadzone(XB1_RY, DEADZONE_R)
 	
-	// Stop running
-	if (isRunning) {
-		if (event_press(XB1_B)) {
-			combo_stop(run)
-			combo_run(stop_run)
-			isAutoWalkingAngle = FALSE
-			isRunning = FALSE
-		} else if (event_press(XB1_RT)) {
-			combo_stop(run)
-			isAutoWalkingAngle = TRUE
-			isRunning = FALSE
-			isToggleRT = TRUE
-			skipCancelToggleRT = TRUE
-		} else if (isCancelToggleAutoRun()) {
-			combo_stop(run)
-			isAutoWalkingAngle = FALSE
-			isRunning = FALSE
-		}
-	}
-	
-	set_val(TRACE_5, isRunning)
-	
 	autoWalkAngle()
-	
-	if (isMercenary() && !isMenuOpen) {
-		preciseShotOnHoldRT()
-		preventRapidFireCancelationOnScatterShot(XB1_RB)
-		rapidFireOnDoublePressRT()
-	}
 	
 	if (isRanger() && !isMenuOpen) {
 		if (get_ival(XB1_LB) && get_ptime(XB1_LB) > 250) skipLB = TRUE
@@ -215,21 +186,6 @@ main {
 		}
 	}
 	
-	if (isWitch() && !isMenuOpen) {
-		rapidFireOnDoublePressRTSpell()
-		if (isToggleRT) {
-			combo_run(aux_witch_spells_1) // Y
-			// combo_run(aux_witch_spells_2)
-			combo_run(aux_witch_spells_3) // LT
-			combo_run(aux_witch_spells_4) // LB
-		} else {
-			combo_stop(aux_witch_spells_1)
-			combo_stop(aux_witch_spells_2)
-			combo_stop(aux_witch_spells_3)
-			combo_stop(aux_witch_spells_4)
-		}
-	}
-	
 	if (get_ival(GET_START)) {
 		set_val(XB1_A, 100)
 	}
@@ -239,7 +195,6 @@ main {
 	if(get_ival(XB1_SHARE)) {
 		isMenuOpen = FALSE
 		isToggleLS = FALSE
-		combo_stop_all()
 	}
 	
 	if (event_release(XB1_VIEW)) skipSelect = FALSE
@@ -410,18 +365,6 @@ function rapidFireOnDoublePressRTSpell() {
 
 // region SCRIPT SPECIFIC
 
-function startRunning() {
-	isRunning = TRUE
-	isAutoWalkingAngle = TRUE
-	isIgnoringChanges = FALSE
-	isToggleRT = FALSE
-	
-	combo_stop_all()
-	
-	if (combo_running(run)) combo_restart(run)
-	else combo_run(run)
-}
-
 function onSelect() {
 	if (event_release(GET_SELECT)) {
 		skipSelect = FALSE
@@ -439,8 +382,6 @@ function onSelect() {
 	if (isAutoWalkingAngle || (!skipSelect && get_ptime(GET_SELECT) < 400)) {
 		return
 	}
-	
-	startRunning()
 }
 
 function onMenu() {
@@ -452,7 +393,6 @@ function onMenu() {
 	isToggleLS = FALSE
 	isMenuOpen = TRUE
 	skipLB = FALSE
-	isRunning = FALSE
 }
 
 function autoWalkAngle() {
@@ -460,15 +400,12 @@ function autoWalkAngle() {
 		if (event_press(GET_HOME)) {
 			autoWalkAngleCancelationKey = GET_HOME
 			isAutoWalkingAngle = FALSE
-			isRunning = FALSE
 		} else if (event_press(XB1_SHARE)) {
 			autoWalkAngleCancelationKey = XB1_SHARE
 			isAutoWalkingAngle = FALSE
-			isRunning = FALSE
 		} else if (event_press(XB1_XBOX)) {
 			autoWalkAngleCancelationKey = XB1_XBOX
 			isAutoWalkingAngle = FALSE
-			isRunning = FALSE
 		}
 	}
 
@@ -509,10 +446,6 @@ function autoWalkAngle() {
 			}
 
 			isInsideCancelationArea = TRUE
-			
-			if (event_press(GET_SELECT)) {
-				startRunning()
-			}
 		}
 	} else {
 		isInsideCancelationArea = FALSE
@@ -601,30 +534,6 @@ function isCancelToggleRTSpell() {
 	
 	if (event_press(GET_START) && isEasyCancel()) return XB1_Y
 	if (event_release(XB1_RT) && isEasyCancel()) return XB1_RT
-	
-	return FALSE
-}
-
-function isCancelToggleAutoRun() {
-	// Cancel auto run if any button is pressed except for analog stick
-	if (
-		event_press(XB1_A) ||
-		event_press(XB1_B) ||
-		event_press(XB1_X) ||
-		event_press(XB1_Y) ||
-		event_press(XB1_UP) ||
-		event_press(XB1_DOWN) ||
-		event_press(XB1_LEFT) ||
-		event_press(XB1_RIGHT) ||
-		event_press(XB1_LT) ||
-		event_press(XB1_RT) ||
-		event_press(XB1_LB) ||
-		event_press(XB1_RB) ||
-		event_press(XB1_SHARE) ||
-		event_press(XB1_MENU)
-	) {
-		return TRUE
-	}
 	
 	return FALSE
 }
@@ -1262,24 +1171,6 @@ combo mana_potion {
 	wait(50)
 }
 
-combo run {
-	set_val(XB1_B, 0)
-	set_val(XB1_LX, 0)
-	set_val(XB1_LY, 0)
-	wait(75)
-	set_val(XB1_B, 100)
-	wait(1000)
-	set_val(XB1_B, 0)
-}
-
-combo stop_run {
-	set_val(XB1_B, 0)
-	set_val(XB1_LX, 0)
-	set_val(XB1_LY, 0)
-	wait(75)
-	set_val(XB1_B, 100)
-}
-
 combo rapid_fire_x {
 	set_val(XB1_X, 100)
 	wait(50)
@@ -1332,4 +1223,4 @@ combo OpenHomeMenu {
 }
 
 // endregion
- ����������������
+
