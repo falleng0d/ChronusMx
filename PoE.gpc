@@ -112,11 +112,8 @@ remap XB1_PR2 -> XB1_VIEW
 // PRESS SHARE
 unmap XB1_SHARE
 
-remap XB1_RB -> XB1_RT
-remap XB1_RT -> XB1_RB
-
-define PRESS_RB = XB1_RT
-define PRESS_RT = XB1_RB
+define PRESS_RB = XB1_RB
+define PRESS_RT = XB1_RT
 
 init {
 	adt_off(XB1_LT)
@@ -139,21 +136,26 @@ main {
 	
 	autoWalkAngle()
 	
+	if (get_ival(XB1_RT)) {
+		set_val(XB1_RT, 0)
+		set_val(XB1_A, 100)
+	}
+	
 	if (isRanger() && !isMenuOpen) {
 		if (get_ival(XB1_LB) && get_ptime(XB1_LB) > 250) skipLB = TRUE
 		
 		if (!get_ival(XB1_LT)) {
 			if (event_press(XB1_RB)) combo_run(rb)
 			// if (event_press(XB1_Y)) combo_run(y)
-			if (event_press(XB1_A)) combo_run(a)
+			// if (event_press(XB1_A)) combo_run(a)
 			// if (get_ival(XB1_LB) > 0) combo_run(mana_potion)
 			if (event_release(XB1_LB)) {
-				if (skipLB) {
-					skipLB = FALSE
-				} else {
-					combo_run(arrow_up_simple)
-					isToggleRT = TRUE
-				}
+				// if (skipLB) {
+				// 	skipLB = FALSE
+				// } else {
+				// 	combo_run(arrow_up_simple)
+				// 	isToggleRT = TRUE
+				// }
 			} else if (get_ival(XB1_LB) && skipLB) {
 				combo_stop(arrow_up)
 				combo_stop(arrow_up_simple)
@@ -176,8 +178,8 @@ main {
 			}
 		}
 		
-		if (get_ival(XB1_LT)) combo_run(rb_fast)
-		else combo_stop(rb_fast)
+		// if (get_ival(XB1_LT)) combo_run(rb_fast)
+		// else combo_stop(rb_fast)
 		
 		rapidFireOnDoublePressRTWithArrowType()
 		
@@ -1016,9 +1018,9 @@ combo hold_rt {
 }
 
 combo rt {
-	set_val(XB1_RT, 100)
+	set_val(XB1_A, 100)
 	wait(100)
-	set_val(XB1_RT, 0)
+	set_val(XB1_A, 0)
 	wait(50)
 }
 
@@ -1099,9 +1101,7 @@ combo aux_witch_spells_4 {
 }
 
 combo rb {
-	set_val(XB1_RB, 100)
-	wait(1000)
-	set_val(XB1_RB, 0)
+	set_val(XB1_X, 100)
 	wait(50)
 }
 
