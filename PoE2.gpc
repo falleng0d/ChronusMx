@@ -202,6 +202,7 @@ main {
 				combo_stop(arrow_up_simple)
 				combo_stop(rb)
 				combo_stop(rt)
+				combo_stop(rt_aux)
 			}
 		}
 		
@@ -363,7 +364,10 @@ function rapidFireOnDoublePressRTWithArrowType() {
 			&& !combo_running(arrow_up_simple)
 			&& !combo_running(rb_fast)
 		) {
-			if (arrowType == XB1_RT) combo_run(rt)
+			if (arrowType == XB1_RT) {
+				combo_run(rt)
+				combo_run(rt_aux)
+			}
 			else if (arrowType == XB1_LT) combo_run(lt)
 		}
 	}
@@ -1111,6 +1115,14 @@ combo rt {
 	wait(100)
 	set_val(XB1_RT, 0)
 	wait(50)
+}
+
+combo rt_aux {
+	set_val(XB1_RT, 0)
+	set_val(XB1_LB, 100)
+	wait(500)
+	
+	wait(1500)
 }
 
 combo lt {
