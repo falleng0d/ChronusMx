@@ -174,7 +174,7 @@ main {
 				skipLB = TRUE
 			}
 			
-			combo_run(hold_lb)
+			// combo_run(hold_lb)
 		}
 		
 		if (!get_ival(XB1_LT)) {
@@ -1254,8 +1254,8 @@ combo arrow_up_simple {
 	// wait(550)
 	
 	// Eletrocuting Arrow
-	set_val(XB1_X, 100)
-	wait(580)
+	// set_val(XB1_X, 100)
+	// wait(580)
 	
 	// Barrage
 	// set_val(XB1_A, 100)
@@ -1358,6 +1358,3 @@ combo OpenHomeMenu {
 }
 
 // endregion
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
- ú¾¹ˆ½ˆ¾½»Œ¼ŒÍ
