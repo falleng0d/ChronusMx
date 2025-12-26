@@ -268,7 +268,6 @@ main {
 
 function rapidFireOnDoublePressRT() {
 	if (isToggleRT) {
-		// Change arrow type
 		if (event_press(XB1_RT)) skillType = XB1_RT
 		// else if (event_press(XB1_RB)) skillType = XB1_RB
 		
