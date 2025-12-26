@@ -72,9 +72,9 @@ int classChanged, changedWithStick, modeChanged, modeChangedWithStick
 int selectedMode
 const string Modes[] = {"No Easy Cancel", "Easy Cancel"}
 
-// RANGER
-int arrowType = XB1_RT
-int prevArrowType = XB1_RT
+// SKILLS
+int skillType = XB1_RT
+int prevSkillType = XB1_RT
 
 // ANGLE AUTO WALK
 int angleDegree, isAutoWalkingAngle
@@ -275,12 +275,12 @@ main {
 function rapidFireOnDoublePressRT() {
 	if (isToggleRT) {
 		// Change arrow type
-		if (event_press(XB1_RT)) arrowType = XB1_RT
-		// else if (event_press(XB1_RB)) arrowType = XB1_RB
+		if (event_press(XB1_RT)) skillType = XB1_RT
+		// else if (event_press(XB1_RB)) skillType = XB1_RB
 		
-		if (arrowType != prevArrowType) {
+		if (skillType != prevSkillType) {
 			skipCancelToggleRT = TRUE
-			prevArrowType = arrowType
+			prevSkillType = skillType
 			
 			combo_stop_all()
 		}
@@ -298,11 +298,11 @@ function rapidFireOnDoublePressRT() {
 			&& !combo_running(arrow_up_simple)
 			&& !combo_running(rb_fast)
 		) {
-			if (arrowType == XB1_RT) {
+			if (skillType == XB1_RT) {
 				combo_run(rt)
 				// combo_run(rt_aux)
 			}
-			else if (arrowType == XB1_LT) combo_run(lt)
+			else if (skillType == XB1_LT) combo_run(lt)
 		}
 	}
 	
@@ -312,8 +312,8 @@ function rapidFireOnDoublePressRT() {
 		// } else {
 		// }
 		isToggleRT = isRapidDoublePressRT()
-		arrowType = XB1_RT
-		prevArrowType = XB1_RT
+		skillType = XB1_RT
+		prevSkillType = XB1_RT
 	} else if (isCancelToggleRTArrow()) {
 		cancelToggleRT()
 	}
