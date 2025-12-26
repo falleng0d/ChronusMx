@@ -266,12 +266,6 @@ main {
 
 // region CLASS SPECIFIC
 
-/**
- * RAPID FIRE
- * Rapidly press XB1_RT twice in quick succession to activate rapid fire mode
- * Press XB1_RT to cancel rapid fire mode (if easy cancel is enabled)
- * Press XB1_X, XB1_Y, XB1_A, XB1_B to rapid fire the respective arrow type
- */
 function rapidFireOnDoublePressRT() {
 	if (isToggleRT) {
 		// Change arrow type
