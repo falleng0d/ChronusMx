@@ -33,9 +33,9 @@ define DIR_LEFT = -1
 define DIR_RIGHT = 1
 define true = TRUE
 define false = FALSE
-define DEADZONE = 8
-define DEADZONE_L = 8
-define DEADZONE_R = 5
+define DEADZONE = 4
+define DEADZONE_L = 4
+define DEADZONE_R = 4
 define MENU_DEADZONE = 20
 define MAX_RADIUS = 32767
 define AUTO_MANA_POTION_ENABLED = FALSE
@@ -46,7 +46,7 @@ define AUTO_MANA_POTION_RESET_IN = 3500
 // ANGLE AUTO WALK RELATED
 define CANCEL_ANGLE = 360
 define CHANGE_AREA = 10
-define START_AREA = 20
+define START_AREA = 5
 define IGNORE_AREA = 100
 
 // REMAPS
@@ -89,6 +89,7 @@ int isMenuOpen
 int autoAttackDuration, autoAttackDurationLastRefreshedIn
 int doHome
 int skipLB
+int skipLT
 int skipSelect
 int isRunning
 
@@ -160,6 +161,7 @@ main {
 	autoWalkAngle()
 	
 	if (!isMenuOpen) {
+		if (get_ival(XB1_LT) && get_ptime(XB1_LT) > 200) skipLT = TRUE
 		if (get_ival(XB1_LB)) {
 			if (get_ptime(XB1_LB) > 250) {
 				skipLB = TRUE
@@ -167,10 +169,9 @@ main {
 			
 			// combo_run(hold_lb)
 		}
-		
 		if (!get_ival(XB1_LT)) {
 			if (event_press(XB1_RB)) combo_run(rb)
-			// if (event_press(XB1_Y)) combo_run(y)
+			if (event_press(XB1_X)) combo_run(x)
 			if (event_press(XB1_A)) combo_run(a)
 			// if (get_ival(XB1_LB) > 0) combo_run(mana_potion)
 			if (event_release(XB1_LB)) {
@@ -180,6 +181,7 @@ main {
 				} else {
 					combo_run(arrow_up_simple)
 					// isToggleRT = TRUE
+					// isAutoWalkingAngle = TRUE
 				}
 			} else if (get_ival(XB1_LB) && skipLB) {
 				combo_stop(arrow_up)
@@ -202,6 +204,10 @@ main {
 		
 		if (event_press(XB1_LT)) {
 			combo_stop_all()
+		}
+		
+		if (event_release(XB1_LT) && !skipLT) {
+			combo_run(lt)
 		}
 		
 		if (get_ival(XB1_LT)) {
@@ -289,14 +295,15 @@ function rapidFireOnDoublePressRT() {
 			&& !combo_running(y)
 			&& !combo_running(a)
 			&& !combo_running(arrow_up)
-			&& !combo_running(arrow_up_simple)
+			&& !combo_running(lt)
+			// && !combo_running(arrow_up_simple)
 			&& !combo_running(rb_fast)
 		) {
 			if (skillType == XB1_RT) {
 				combo_run(rt)
-				combo_run(aux_skill_1)
-				// combo_run(aux_skill_2)
-				combo_run(aux_skill_3)
+				// combo_run(aux_skill_1)
+				combo_run(aux_skill_2)
+				// combo_run(aux_skill_3)
 			}
 			else if (skillType == XB1_LT) combo_run(lt)
 		}
@@ -821,67 +828,9 @@ function clearOled() {
 
 // region COMBOS
 
-combo hold_rt {
-	set_val(XB1_LT, 0)
-	set_val(PRESS_RT, 0)
-	wait(10)
-	set_val(XB1_LT, 100)
-	set_val(PRESS_RT, 0)
-	wait(70)
-	set_val(XB1_LT, 100)
-	set_val(PRESS_RT, 100)
-	wait(100)
-	set_val(XB1_LT, 100)
-	set_val(PRESS_RT, 0)
-	
-	wait(70)
-	set_val(XB1_LT, 0)
-	wait(70)
-	
-	set_val(XB1_LT, 0)
-	set_val(PRESS_RB, 100)
-	wait(150)
-	set_val(XB1_LT, 0)
-	set_val(PRESS_RB, 0)
-	wait(150)
-	set_val(XB1_LT, 0)
-	set_val(PRESS_RB, 100)
-	wait(150)
-	set_val(XB1_LT, 0)
-	set_val(PRESS_RB, 0)
-	wait(150)
-	set_val(XB1_LT, 0)
-	set_val(PRESS_RB, 100)
-	wait(150)
-	set_val(XB1_LT, 0)
-	set_val(PRESS_RB, 0)
-	wait(150)
-	set_val(XB1_LT, 0)
-	set_val(PRESS_RB, 100)
-	wait(150)
-	set_val(XB1_LT, 0)
-	set_val(PRESS_RB, 0)
-	wait(150)
-	set_val(XB1_LT, 0)
-	set_val(PRESS_RB, 100)
-	wait(150)
-	set_val(XB1_LT, 0)
-	set_val(PRESS_RB, 0)
-	wait(150)
-	set_val(XB1_LT, 0)
-	set_val(XB1_X, 100)
-	wait(70)
-	set_val(XB1_LT, 0)
-	set_val(XB1_X, 0)
-	wait(70)
-	set_val(XB1_LT, 0)
-	set_val(XB1_X, 100)
-	wait(70)
-}
-
 combo rt {
-	set_val(XB1_RT, 100); wait(450)
-	wait(1500)
+	set_val(XB1_RT, 100); wait(75);
+	wait(75);
 }
 
 combo aux_skill_1 {
@@ -890,25 +839,30 @@ combo aux_skill_1 {
 }
 
 combo aux_skill_2 {
-	set_val(XB1_LB, 100); wait(300);
-	wait(1500);
+	wait(3000);
+	set_val(XB1_RT, 0); set_val(XB1_Y, 100); wait(300);
 }
 
 combo aux_skill_3 {
-	set_val(XB1_Y, 100); wait(500);
+	set_val(XB1_X, 100); wait(1000);
 	wait(5000);
 }
 
 combo lt {
-	set_val(XB1_LT, 100); wait(100)
-	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
-	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
-	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
-	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
-	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
-	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
-	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
-	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(75); set_val(XB1_LT, 100); set_val(XB1_RT, 0); wait(75)
+	set_val(XB1_LT, 100); wait(75);
+	set_val(XB1_LT, 100); set_val(XB1_RB, 100); wait(250);
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); set_val(XB1_DOWN, 100); wait(150);
+	set_val(XB1_LT, 100); wait(100);
+	set_val(XB1_LT, 100); set_val(XB1_DOWN, 100); wait(100);
+	set_val(XB1_LT, 100); wait(750);
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(150);
+	set_val(XB1_LT, 100); wait(250);
+	set_val(XB1_LT, 100); set_val(XB1_DOWN, 100); wait(100);
+	set_val(XB1_LT, 100); wait(700);
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(150);
+	set_val(XB1_LT, 100); wait(1800);
+	set_val(XB1_LT, 100); set_val(XB1_RT, 100); wait(150);
+	set_val(XB1_LT, 100); wait(75);
 }
 
 combo rb {
@@ -931,6 +885,11 @@ combo y {
 	wait(50)
 }
 
+combo x {
+	set_val(XB1_X, 100)
+	wait(550)
+}
+
 combo a {
 	set_val(XB1_A, 100)
 	wait(600)
@@ -949,9 +908,8 @@ combo arrow_up {
 }
 
 combo arrow_up_simple {
-	set_val(XB1_LB, 100); wait(500)
-	set_val(XB1_Y, 100); wait(500)
-	set_val(XB1_RB, 100); wait(300)
+	set_val(XB1_RT, 0); set_val(XB1_Y, 0); set_val(XB1_X, 100); wait(300);
+	set_val(XB1_RT, 0); set_val(XB1_Y, 100); wait(300);
 }
 
 combo hold_lb {
