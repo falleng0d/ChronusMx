@@ -61,6 +61,7 @@ int autoWalkAngleCancelationKey
 
 // LOCAL VARIABLES (for easier code reading)
 int angle_deg // used on rapid_look_around_8_directions_l
+int skipStart
 
 remap XB1_MENU -> XB1_PR1
 remap XB1_PR1 -> XB1_MENU
@@ -102,6 +103,11 @@ main {
 		if (event_press(XB1_RT)) {
 			autoWalkAngleCancelationKey = XB1_RT
 			isAutoWalkingAngle = FALSE
+		}
+		if (event_press(GET_START)) {
+			autoWalkAngleCancelationKey = GET_START
+			isAutoWalkingAngle = FALSE
+			skipStart = TRUE
 		}
 	}
 
@@ -166,15 +172,17 @@ main {
 
 		rapid_look_around_full_l(DEADZONE_L)
 	}
-
-	if (get_ival(GET_START)) {
+	
+	if (get_ival(GET_START) && !skipStart) {
 		if (get_ptime(GET_START) > 400) {
 			combo_run(rapid_fire_a)
 		} else {
 			set_val(XB1_A, 100)
 		}
+	} else if (skipStart && event_release(GET_START)) {
+		skipStart = FALSE
 	}
-
+	
 	if (get_ival(GET_SELECT)) {
 		set_val(XB1_B, 100)
 	}
