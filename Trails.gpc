@@ -62,6 +62,7 @@ int autoWalkAngleCancelationKey
 // LOCAL VARIABLES (for easier code reading)
 int angle_deg // used on rapid_look_around_8_directions_l
 int skipStart
+int skipSelect
 
 remap XB1_MENU -> XB1_PR1
 remap XB1_PR1 -> XB1_MENU
@@ -127,6 +128,7 @@ main {
 			set_val(TRACE_1, angleDegree)
 			isAutoWalkingAngle = TRUE
 			isIgnoringChanges = TRUE
+			skipSelect = TRUE
 		} else if (isAutoWalkingAngle) {
 			if (!isInsideCancelationArea) {
 				// If the new angle is not within X degrees of the previous angle cancel isAutoWalkingAngle
@@ -183,8 +185,10 @@ main {
 		skipStart = FALSE
 	}
 	
-	if (get_ival(GET_SELECT)) {
+	if (get_ival(GET_SELECT) && !skipSelect) {
 		set_val(XB1_B, 100)
+	} else if (skipSelect && event_release(GET_SELECT)) {
+		skipSelect = FALSE
 	}
 
 	if(get_ival(XB1_SHARE)) {
