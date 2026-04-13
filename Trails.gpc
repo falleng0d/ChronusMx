@@ -431,4 +431,4 @@ combo OpenHomeMenu {
 	wait(200)
 	set_val(PRESS_HOME, 0)
 }
- ����������������
+
